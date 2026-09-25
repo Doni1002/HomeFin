@@ -103,7 +103,7 @@
 
     .form-container { padding: 16px 4px; display: flex; flex-direction: column; gap: 14px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { font-size: 0.85rem; color: var(--text-gray); font-weight: 500; }
+    .form-group label { font-size: 0.85rem; color: var(--text-gray); font-weight: 500; text-align: left; }
     .form-group input, .form-group select {
       padding: 12px;
       border: 1px solid var(--border-color);
@@ -122,6 +122,7 @@
     .item-left { display: flex; align-items: center; gap: 12px; }
     .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; flex-shrink: 0; }
 
+    /* Bottom Nav */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -129,24 +130,27 @@
       max-width: 480px;
       height: 64px;
       background: white;
-      display: flex;
+      display: none;
       justify-content: space-around;
       align-items: center;
       border-top: 1px solid var(--border-color);
       z-index: 10;
     }
+    .bottom-nav.active { display: flex; }
     .nav-item { border: none; background: transparent; display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 0.75rem; cursor: pointer; gap: 3px; }
     .nav-item.active { color: var(--primary-blue); font-weight: 600; }
     .nav-btn-add { background: var(--primary-blue); color: white; width: 48px; height: 48px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; margin-top: -24px; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.35); cursor: pointer; }
 
+    /* Login Screen UI */
     .login-container { padding: clamp(24px, 6vw, 36px) 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
     .user-select-grid { display: flex; gap: 14px; margin: 24px 0; width: 100%; }
     .user-card { flex: 1; border: 2px solid var(--border-color); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
     .user-card.selected { border-color: var(--primary-blue); background: var(--light-blue); box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15); }
 
+    /* Custom Modals */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; backdrop-filter: blur(2px); }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: white; width: 100%; max-width: 320px; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
+    .modal-card { background: white; width: 100%; max-width: 340px; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
     .modal-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
     .modal-icon.info { background: var(--light-blue); color: var(--primary-blue); }
     .modal-icon.success { background: #D1FAE5; color: var(--green); }
@@ -157,7 +161,8 @@
     .modal-btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
     .modal-btn-sec { background: #F1F5F9; color: var(--text-dark); }
 
-    .spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 2px solid white; width: 14px; height: 14px; animation: spin 0.8s linear infinite; display: inline-block; }
+    .spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 2px solid white; width: 12px; height: 12px; animation: spin 0.8s linear infinite; display: inline-block; }
+    .spinner-dark { border: 2px solid rgba(15, 23, 42, 0.2); border-top: 2px solid var(--text-dark); }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   </style>
@@ -172,6 +177,18 @@
       <p class="modal-message" id="modal-message">Pesan alert di sini.</p>
       <div class="modal-actions" id="modal-actions">
         <button class="modal-btn btn-primary" onclick="closeModal()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Input Pop-up Modal (Budget & Kategori UI) -->
+  <div class="modal-overlay" id="form-modal">
+    <div class="modal-card" style="text-align: left;">
+      <h3 class="modal-title" id="form-modal-title" style="margin-bottom: 14px;">Tambah Data</h3>
+      <div id="form-modal-body"></div>
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button class="modal-btn modal-btn-sec" onclick="closeFormModal()">Batal</button>
+        <button class="modal-btn btn-primary" id="btn-submit-form-modal"><span>Simpan</span></button>
       </div>
     </div>
   </div>
@@ -343,16 +360,15 @@
   </section>
 
   <!-- Bottom Navigation -->
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" id="main-bottom-nav">
     <button class="nav-item active" onclick="navigateTo('screen-dashboard')"><i data-lucide="home" style="width:20px;"></i><span>Home</span></button>
     <button class="nav-item" onclick="navigateTo('screen-transactions')"><i data-lucide="receipt" style="width:20px;"></i><span>Transaksi</span></button>
-    <button class="nav-btn-add" onclick="openTrxForm()"><i data-lucide="plus" style="width:24px;"></i></button>
+    <button class="nav-btn-add" onclick="handleDynamicAdd()"><i data-lucide="plus" style="width:24px;"></i></button>
     <button class="nav-item" onclick="navigateTo('screen-budget')"><i data-lucide="wallet" style="width:20px;"></i><span>Budget</span></button>
     <button class="nav-item" onclick="navigateTo('screen-profile')"><i data-lucide="user" style="width:20px;"></i><span>Profil</span></button>
   </nav>
 
   <script>
-    // ⚠️ MASUKKAN URL DEPLOYMENT APPS SCRIPT SAYA DI SINI
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX-v0_baDOCAo0lCW7kASzbJme3VN3d4tFNDO2KRpeKMcZwY2ngx01El0RiKbbqsO0xQ/exec";
 
     let appData = { 
@@ -363,11 +379,10 @@
     };
 
     let selectedLoginUser = 'suami';
+    let currentScreenId = 'screen-login';
     let monthlyBarChart = null;
 
     function formatRupiah(num) { return 'Rp ' + Number(num || 0).toLocaleString('id-ID'); }
-
-    // ----------------- API KONEKTOR DENGAN REDIRECT FETCH ----------------- //
 
     function fetchFromBackend(action, payloadData = null, onSuccess = null) {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_URL")) {
@@ -376,7 +391,6 @@
       }
 
       if (payloadData) {
-        // POST Request
         fetch(APPS_SCRIPT_URL, {
           method: "POST",
           mode: "cors",
@@ -390,7 +404,6 @@
           showAlert('Error Database', 'Gagal memproses data ke Apps Script: ' + err, 'danger');
         });
       } else {
-        // GET Request
         fetch(APPS_SCRIPT_URL + "?action=" + action, {
           method: "GET",
           redirect: "follow"
@@ -400,6 +413,33 @@
         .catch(err => {
           showAlert('Error Koneksi', 'Gagal membaca database Google Sheets: ' + err, 'danger');
         });
+      }
+    }
+
+    // Helper Universal untuk Buffering / Loading Button
+    function setBtnLoading(btn, isLoading, loadingText = 'Memproses...') {
+      if (!btn) return;
+      if (typeof btn === 'string') btn = document.getElementById(btn);
+      if (!btn) return;
+
+      if (isLoading) {
+        btn.disabled = true;
+        btn.setAttribute('data-original-html', btn.innerHTML);
+        btn.innerHTML = `<span class="spinner"></span> <span>${loadingText}</span>`;
+      } else {
+        btn.disabled = false;
+        const original = btn.getAttribute('data-original-html');
+        if (original) btn.innerHTML = original;
+      }
+    }
+
+    function handleDynamicAdd() {
+      if (currentScreenId === 'screen-budget') {
+        openBudgetForm();
+      } else if (currentScreenId === 'screen-profile') {
+        openCategoryForm();
+      } else {
+        openTrxForm();
       }
     }
 
@@ -419,12 +459,19 @@
         return;
       }
 
-      if (pin === '1234') {
-        initData();
-        navigateTo('screen-dashboard');
-      } else {
-        showAlert('Login Gagal', 'PIN yang kamu masukkan salah. (Default PIN: 1234)', 'danger');
-      }
+      const btnLogin = document.getElementById('btn-login');
+      setBtnLoading(btnLogin, true, 'Memeriksa...');
+
+      setTimeout(() => {
+        if (pin === '1234') {
+          initData();
+          setBtnLoading(btnLogin, false);
+          navigateTo('screen-dashboard');
+        } else {
+          setBtnLoading(btnLogin, false);
+          showAlert('Login Gagal', 'PIN yang kamu masukkan salah. (Default PIN: 1234)', 'danger');
+        }
+      }, 300);
     }
 
     function handleLogout() {
@@ -445,9 +492,12 @@
       if (onConfirm) {
         actions.innerHTML = `
           <button class="modal-btn modal-btn-sec" onclick="closeModal()">Batal</button>
-          <button class="modal-btn btn-primary" style="background:var(--red);" id="btn-modal-confirm">Ya, Lanjutkan</button>
+          <button class="modal-btn btn-primary" style="background:var(--red);" id="btn-modal-confirm"><span>Ya, Lanjutkan</span></button>
         `;
-        document.getElementById('btn-modal-confirm').onclick = () => { closeModal(); onConfirm(); };
+        document.getElementById('btn-modal-confirm').onclick = (e) => { 
+          setBtnLoading(e.currentTarget, true, 'Menghapus...');
+          onConfirm(e.currentTarget); 
+        };
       } else {
         actions.innerHTML = `<button class="modal-btn btn-primary" onclick="closeModal()">OK</button>`;
       }
@@ -460,23 +510,30 @@
       document.getElementById('custom-modal').classList.remove('active');
     }
 
-    function setBtnLoading(btnId, isLoading, originalText = '') {
-      const btn = document.getElementById(btnId);
-      if (!btn) return;
-      if (isLoading) {
-        btn.disabled = true;
-        btn.setAttribute('data-text', btn.innerHTML);
-        btn.innerHTML = `<span class="spinner"></span> <span>Memproses...</span>`;
-      } else {
-        btn.disabled = false;
-        btn.innerHTML = btn.getAttribute('data-text') || originalText;
-      }
+    function openFormModal(title, bodyHTML, onSubmit) {
+      document.getElementById('form-modal-title').innerText = title;
+      document.getElementById('form-modal-body').innerHTML = bodyHTML;
+      const btnSubmit = document.getElementById('btn-submit-form-modal');
+      btnSubmit.onclick = () => onSubmit(btnSubmit);
+      document.getElementById('form-modal').classList.add('active');
+    }
+
+    function closeFormModal() {
+      document.getElementById('form-modal').classList.remove('active');
     }
 
     function navigateTo(screenId) {
+      currentScreenId = screenId;
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(screenId).classList.add('active');
       
+      const navBottom = document.getElementById('main-bottom-nav');
+      if (screenId === 'screen-login') {
+        navBottom.classList.remove('active');
+      } else {
+        navBottom.classList.add('active');
+      }
+
       document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => {
         btn.classList.remove('active');
         if (btn.getAttribute('onclick').includes(screenId)) {
@@ -575,7 +632,7 @@
 
     function handleSaveTrx(e) {
       e.preventDefault();
-      setBtnLoading('btn-save-trx', true);
+      setBtnLoading('btn-save-trx', true, 'Simpan Data...');
 
       const payload = {
         id: document.getElementById('trx-id').value,
@@ -596,9 +653,11 @@
       });
     }
 
-    function deleteTrx(id) {
-      showAlert('Hapus Transaksi', 'Apakah kamu yakin ingin menghapus data transaksi ini?', 'danger', () => {
+    function deleteTrx(id, btnElement) {
+      showAlert('Hapus Transaksi', 'Apakah kamu yakin ingin menghapus data transaksi ini?', 'danger', (confirmBtn) => {
+        if (btnElement) setBtnLoading(btnElement, true, 'Hapus...');
         fetchFromBackend("hapusTransaksi", { id: id }, res => {
+          closeModal();
           showAlert('Dihapus', res.message, 'success');
           initData();
           navigateTo('screen-transactions');
@@ -623,7 +682,7 @@
             <div style="text-align:right;">
               <strong class="${isInc ? 'text-green' : 'text-red'}">${isInc ? '+' : '-'}${formatRupiah(t.jumlah)}</strong><br>
               <button class="btn-edit" onclick='openTrxForm(${JSON.stringify(t)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteTrx('${t.id}')">Hapus</button>
+              <button class="btn-danger" onclick="deleteTrx('${t.id}', this)"><span>Hapus</span></button>
             </div>
           </div>
         `;
@@ -637,16 +696,33 @@
       renderTransactions(type === 'semua' ? appData.transactions : appData.transactions.filter(t => t.jenis === type));
     }
 
-    function openBudgetForm(b = null) {
-      const name = prompt("Nama Kategori Budget:", b ? b.kategori : "Makan & Minum");
-      if (!name) return;
-      const limit = prompt("Limit Anggaran (Rp):", b ? b.limit : "1000000");
-      if (!limit) return;
+    // ----------------- BUDGET HANDLER WITH LOADING ----------------- //
 
-      fetchFromBackend("simpanBudget", { id: b ? b.id : '', kategori: name, limit: limit }, res => {
-        showAlert('Sukses', res.message, 'success');
-        initData();
-        navigateTo('screen-budget');
+    function openBudgetForm(b = null) {
+      const html = `
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Kategori Budget</label>
+          <input type="text" id="pop-bg-kategori" value="${b ? b.kategori : ''}" placeholder="Misal: Makan & Minum">
+        </div>
+        <div class="form-group">
+          <label>Limit Anggaran (Rp)</label>
+          <input type="number" id="pop-bg-limit" value="${b ? b.limit : ''}" placeholder="Misal: 1000000">
+        </div>
+      `;
+      openFormModal(b ? 'Edit Budget' : 'Tambah Budget', html, (submitBtn) => {
+        const kat = document.getElementById('pop-bg-kategori').value.trim();
+        const lim = document.getElementById('pop-bg-limit').value.trim();
+        if (!kat || !lim) {
+          showAlert('Error', 'Semua field wajib diisi!', 'danger');
+          return;
+        }
+        setBtnLoading(submitBtn, true, 'Menyimpan...');
+        fetchFromBackend("simpanBudget", { id: b ? b.id : '', kategori: kat, limit: lim }, res => {
+          closeFormModal();
+          showAlert('Sukses', res.message, 'success');
+          initData();
+          navigateTo('screen-budget');
+        });
       });
     }
 
@@ -662,7 +738,7 @@
               <strong>${b.kategori}</strong>
               <div>
                 <button class="btn-edit" onclick='openBudgetForm(${JSON.stringify(b)})'>Edit</button>
-                <button class="btn-danger" onclick="deleteBudget('${b.id}')">Hapus</button>
+                <button class="btn-danger" onclick="deleteBudget('${b.id}', this)"><span>Hapus</span></button>
               </div>
             </div>
             <small style="color:var(--text-gray);">Limit: ${formatRupiah(b.limit)}</small>
@@ -672,9 +748,11 @@
       document.getElementById('bg-total-limit').innerText = formatRupiah(tot);
     }
 
-    function deleteBudget(id) {
-      showAlert('Hapus Budget', 'Hapus limit anggaran ini?', 'danger', () => {
+    function deleteBudget(id, btnElement) {
+      showAlert('Hapus Budget', 'Hapus limit anggaran ini?', 'danger', (confirmBtn) => {
+        if (btnElement) setBtnLoading(btnElement, true, 'Hapus...');
         fetchFromBackend("hapusBudget", { id: id }, res => {
+          closeModal();
           showAlert('Dihapus', res.message, 'success');
           initData();
           navigateTo('screen-budget');
@@ -682,16 +760,36 @@
       });
     }
 
-    function openCategoryForm(c = null) {
-      const nama = prompt("Nama Kategori:", c ? c.nama : "");
-      if (!nama) return;
-      const jenis = prompt("Jenis (Pengeluaran/Pemasukan):", c ? c.jenis : "Pengeluaran");
-      if (!jenis) return;
+    // ----------------- KATEGORI HANDLER WITH LOADING ----------------- //
 
-      fetchFromBackend("simpanKategori", { id: c ? c.id : '', nama: nama, jenis: jenis, ikon: 'tag' }, res => {
-        showAlert('Sukses', res.message, 'success');
-        initData();
-        navigateTo('screen-profile');
+    function openCategoryForm(c = null) {
+      const html = `
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Nama Kategori</label>
+          <input type="text" id="pop-kat-nama" value="${c ? c.nama : ''}" placeholder="Misal: Tagihan">
+        </div>
+        <div class="form-group">
+          <label>Jenis Kategori</label>
+          <select id="pop-kat-jenis">
+            <option value="Pengeluaran" ${c && c.jenis === 'Pengeluaran' ? 'selected' : ''}>Pengeluaran</option>
+            <option value="Pemasukan" ${c && c.jenis === 'Pemasukan' ? 'selected' : ''}>Pemasukan</option>
+          </select>
+        </div>
+      `;
+      openFormModal(c ? 'Edit Kategori' : 'Tambah Kategori', html, (submitBtn) => {
+        const nama = document.getElementById('pop-kat-nama').value.trim();
+        const jenis = document.getElementById('pop-kat-jenis').value;
+        if (!nama) {
+          showAlert('Error', 'Nama kategori wajib diisi!', 'danger');
+          return;
+        }
+        setBtnLoading(submitBtn, true, 'Menyimpan...');
+        fetchFromBackend("simpanKategori", { id: c ? c.id : '', nama: nama, jenis: jenis, ikon: 'tag' }, res => {
+          closeFormModal();
+          showAlert('Sukses', res.message, 'success');
+          initData();
+          navigateTo('screen-profile');
+        });
       });
     }
 
@@ -704,16 +802,18 @@
             <div><strong>${c.nama}</strong> <small>(${c.jenis})</small></div>
             <div>
               <button class="btn-edit" onclick='openCategoryForm(${JSON.stringify(c)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteCategory('${c.id}')">Hapus</button>
+              <button class="btn-danger" onclick="deleteCategory('${c.id}', this)"><span>Hapus</span></button>
             </div>
           </div>
         `;
       });
     }
 
-    function deleteCategory(id) {
-      showAlert('Hapus Kategori', 'Apakah kamu yakin ingin menghapus kategori ini?', 'danger', () => {
+    function deleteCategory(id, btnElement) {
+      showAlert('Hapus Kategori', 'Apakah kamu yakin ingin menghapus kategori ini?', 'danger', (confirmBtn) => {
+        if (btnElement) setBtnLoading(btnElement, true, 'Hapus...');
         fetchFromBackend("hapusKategori", { id: id }, res => {
+          closeModal();
           showAlert('Dihapus', res.message, 'success');
           initData();
           navigateTo('screen-profile');
@@ -723,7 +823,7 @@
 
     function handleSaveProfil(e) {
       e.preventDefault();
-      setBtnLoading('btn-save-prof', true);
+      setBtnLoading('btn-save-prof', true, 'Simpan Profil...');
 
       const payload = {
         suami: document.getElementById('prof-suami').value,
