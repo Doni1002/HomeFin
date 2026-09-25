@@ -139,13 +139,11 @@
     .nav-item.active { color: var(--primary-blue); font-weight: 600; }
     .nav-btn-add { background: var(--primary-blue); color: white; width: 48px; height: 48px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; margin-top: -24px; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.35); cursor: pointer; }
 
-    /* Login Screen UI */
     .login-container { padding: clamp(24px, 6vw, 36px) 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
     .user-select-grid { display: flex; gap: 14px; margin: 24px 0; width: 100%; }
     .user-card { flex: 1; border: 2px solid var(--border-color); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
     .user-card.selected { border-color: var(--primary-blue); background: var(--light-blue); box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15); }
 
-    /* Custom Pop-up Alert Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; backdrop-filter: blur(2px); }
     .modal-overlay.active { display: flex; }
     .modal-card { background: white; width: 100%; max-width: 320px; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
@@ -233,7 +231,6 @@
         </div>
       </div>
 
-      <!-- Bar Chart Grafik Keuangan -->
       <div class="card">
         <h3 style="font-size:0.95rem;">Grafik Bulanan (Bar Chart)</h3>
         <div style="height: 160px; margin-top:8px;">
@@ -241,7 +238,6 @@
         </div>
       </div>
 
-      <!-- List Transaksi Terakhir -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <h3 style="font-size:0.95rem;">Transaksi Terakhir</h3>
@@ -356,9 +352,9 @@
   </nav>
 
   <script>
+    // ⚠️ MASUKKAN URL DEPLOYMENT APPS SCRIPT SAYA DI SINI
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX-v0_baDOCAo0lCW7kASzbJme3VN3d4tFNDO2KRpeKMcZwY2ngx01El0RiKbbqsO0xQ/exec";
 
-    // Fast Cache Local State for Optimized Operations
     let appData = { 
       transactions: [], 
       budgets: [], 
@@ -371,38 +367,41 @@
 
     function formatRupiah(num) { return 'Rp ' + Number(num || 0).toLocaleString('id-ID'); }
 
-    // ----------------- OPTIMIZED API CONNECTOR ----------------- //
+    // ----------------- API KONEKTOR DENGAN REDIRECT FETCH ----------------- //
 
     function fetchFromBackend(action, payloadData = null, onSuccess = null) {
-      if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxX-v0_baDOCAo0lCW7kASzbJme3VN3d4tFNDO2KRpeKMcZwY2ngx01El0RiKbbqsO0xQ/exec") {
-        console.warn("URL Apps Script belum diset. Menjalankan fungsi secara lokal.");
-        if (onSuccess) onSuccess({ status: "success", message: "Proses berhasil (Mode Lokal)" });
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_URL")) {
+        showAlert('URL Belum Diset', 'Masukkan URL Web App Deployment dari Apps Script pada variabel APPS_SCRIPT_URL di file index.html', 'danger');
         return;
       }
 
       if (payloadData) {
+        // POST Request
         fetch(APPS_SCRIPT_URL, {
           method: "POST",
           mode: "cors",
+          redirect: "follow",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: action, data: payloadData })
         })
         .then(res => res.json())
         .then(data => { if (onSuccess) onSuccess(data); })
         .catch(err => {
-          showAlert('Error', 'Gagal terhubung ke Google Apps Script: ' + err, 'danger');
+          showAlert('Error Database', 'Gagal memproses data ke Apps Script: ' + err, 'danger');
         });
       } else {
-        fetch(APPS_SCRIPT_URL + "?action=" + action)
+        // GET Request
+        fetch(APPS_SCRIPT_URL + "?action=" + action, {
+          method: "GET",
+          redirect: "follow"
+        })
         .then(res => res.json())
         .then(data => { if (onSuccess) onSuccess(data); })
         .catch(err => {
-          console.error("Fetch Error:", err);
+          showAlert('Error Koneksi', 'Gagal membaca database Google Sheets: ' + err, 'danger');
         });
       }
     }
-
-    // ----------------- LOGIN LOGIC & VALIDATION ----------------- //
 
     function selectLoginUser(role) {
       selectedLoginUser = role;
@@ -434,8 +433,6 @@
         navigateTo('screen-login');
       });
     }
-
-    // ----------------- CUSTOM ALERT MODAL ----------------- //
 
     function showAlert(title, message, type = 'success', onConfirm = null) {
       document.getElementById('modal-title').innerText = title;
@@ -538,8 +535,6 @@
       });
     }
 
-    // ----------------- DASHBOARD READ-ONLY LIST ----------------- //
-
     function renderDashboardTrxList() {
       const container = document.getElementById('dashboard-trx-list');
       if (!container) return;
@@ -563,8 +558,6 @@
       });
       lucide.createIcons();
     }
-
-    // ----------------- HANDLERS TRANSAKSI ----------------- //
 
     function openTrxForm(data = null) {
       document.getElementById('trx-id').value = data ? data.id : '';
@@ -643,8 +636,6 @@
       btn.classList.add('active');
       renderTransactions(type === 'semua' ? appData.transactions : appData.transactions.filter(t => t.jenis === type));
     }
-
-    // ----------------- HANDLERS BUDGET & KATEGORI ----------------- //
 
     function openBudgetForm(b = null) {
       const name = prompt("Nama Kategori Budget:", b ? b.kategori : "Makan & Minum");
@@ -745,8 +736,6 @@
         initData();
       });
     }
-
-    // ----------------- BAR CHART GRAFIK DASHBOARD ----------------- //
 
     function renderMonthlyBarChart() {
       const ctx = document.getElementById('monthlyBarChart').getContext('2d');
