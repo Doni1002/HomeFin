@@ -174,7 +174,7 @@
         </div>
       </div>
 
-      <!-- List Transaksi Terakhir di Dashboard (Hanya Read-only, tanpa Action Button) -->
+      <!-- List Transaksi Terakhir di Dashboard (Read-only, Tanpa Action) -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <h3 style="font-size:0.95rem;">Transaksi Terakhir</h3>
@@ -287,21 +287,13 @@
   </nav>
 
   <script>
-    // Initial State Fallback (Local & GitHub Support)
+    // MASUKKAN URL WEB APP APPS SCRIPT DI SINI
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX-v0_baDOCAo0lCW7kASzbJme3VN3d4tFNDO2KRpeKMcZwY2ngx01El0RiKbbqsO0xQ/exec";
+
     let appData = { 
-      transactions: [
-        { id: 'TRX-1', tanggal: '2026-09-24', jenis: 'Pengeluaran', jumlah: 350000, kategori: 'Makan & Minum', metode: 'Cash', catatan: 'Belanja Supermarket', pengguna: 'Ellen' },
-        { id: 'TRX-2', tanggal: '2026-09-24', jenis: 'Pengeluaran', jumlah: 100000, kategori: 'Transportasi', metode: 'Transfer Bank', catatan: 'Bensin', pengguna: 'Doni' }
-      ], 
-      budgets: [
-        { id: 'BGT-1', kategori: 'Makan & Minum', limit: 2000000 },
-        { id: 'BGT-2', kategori: 'Transportasi', limit: 1000000 }
-      ], 
-      categories: [
-        { id: 'KAT-1', nama: 'Makan & Minum', jenis: 'Pengeluaran', ikon: 'utensils' },
-        { id: 'KAT-2', nama: 'Transportasi', jenis: 'Pengeluaran', ikon: 'car' },
-        { id: 'KAT-3', nama: 'Gaji', jenis: 'Pemasukan', ikon: 'wallet' }
-      ], 
+      transactions: [], 
+      budgets: [], 
+      categories: [], 
       profile: { suami: 'Doni', istri: 'Ellen' } 
     };
 
@@ -309,6 +301,39 @@
     let monthlyLineChart = null;
 
     function formatRupiah(num) { return 'Rp ' + Number(num || 0).toLocaleString('id-ID'); }
+
+    // ----------------- API CONNECTOR FOR GITHUB PAGES ----------------- //
+
+    function fetchFromBackend(action, payloadData = null, onSuccess = null) {
+      if (APPS_SCRIPT_URL === "GANTI_DENGAN_URL_DEPLOYMENT_WEB_APP_KAMU") {
+        console.warn("URL Apps Script belum diset. Menjalankan fungsi secara lokal.");
+        if (onSuccess) onSuccess({ status: "success", message: "Proses berhasil (Mode Lokal)" });
+        return;
+      }
+
+      if (payloadData) {
+        // POST Request
+        fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: action, data: payloadData })
+        })
+        .then(res => res.json())
+        .then(data => { if (onSuccess) onSuccess(data); })
+        .catch(err => {
+          showAlert('Error', 'Gagal terhubung ke Google Apps Script: ' + err, 'danger');
+        });
+      } else {
+        // GET Request
+        fetch(APPS_SCRIPT_URL + "?action=" + action)
+        .then(res => res.json())
+        .then(data => { if (onSuccess) onSuccess(data); })
+        .catch(err => {
+          console.error("Fetch Error:", err);
+        });
+      }
+    }
 
     // ----------------- LOGIN LOGIC ----------------- //
 
@@ -388,14 +413,12 @@
     }
 
     function initData() {
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(data => {
+      fetchFromBackend("getInitialData", null, data => {
+        if (data && data.transactions) {
           appData = data;
           updateUI();
-        }).getInitialData();
-      } else {
-        updateUI();
-      }
+        }
+      });
     }
 
     function updateUI() {
@@ -439,7 +462,6 @@
       if (!container) return;
       container.innerHTML = appData.transactions.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray);">Belum ada transaksi</p>' : '';
       
-      // Ambil 5 transaksi paling baru
       const recent = appData.transactions.slice().reverse().slice(0, 5);
       recent.forEach(t => {
         const isInc = t.jenis === 'Pemasukan';
@@ -490,44 +512,21 @@
         catatan: document.getElementById('trx-catatan').value
       };
 
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(res => {
-          setBtnLoading('btn-save-trx', false);
-          showAlert('Berhasil', res.message, 'success');
-          initData();
-          navigateTo('screen-transactions');
-        }).simpanTransaksi(payload);
-      } else {
-        setTimeout(() => {
-          setBtnLoading('btn-save-trx', false);
-          if (payload.id) {
-            const idx = appData.transactions.findIndex(t => t.id === payload.id);
-            if (idx !== -1) appData.transactions[idx] = payload;
-          } else {
-            payload.id = 'TRX-' + Date.now();
-            appData.transactions.push(payload);
-          }
-          showAlert('Berhasil', 'Transaksi disimpan', 'success');
-          updateUI();
-          navigateTo('screen-transactions');
-        }, 500);
-      }
+      fetchFromBackend("simpanTransaksi", payload, res => {
+        setBtnLoading('btn-save-trx', false);
+        showAlert('Berhasil', res.message, 'success');
+        initData();
+        navigateTo('screen-transactions');
+      });
     }
 
     function deleteTrx(id) {
       showAlert('Hapus Transaksi', 'Apakah kamu yakin ingin menghapus data transaksi ini?', 'danger', () => {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.withSuccessHandler(res => {
-            showAlert('Dihapus', res.message, 'success');
-            initData();
-            navigateTo('screen-transactions');
-          }).hapusTransaksi(id);
-        } else {
-          appData.transactions = appData.transactions.filter(t => t.id !== id);
-          showAlert('Dihapus', 'Transaksi berhasil dihapus', 'success');
-          updateUI();
+        fetchFromBackend("hapusTransaksi", { id: id }, res => {
+          showAlert('Dihapus', res.message, 'success');
+          initData();
           navigateTo('screen-transactions');
-        }
+        });
       });
     }
 
@@ -570,13 +569,11 @@
       const limit = prompt("Limit Anggaran (Rp):", b ? b.limit : "1000000");
       if (!limit) return;
 
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(res => {
-          showAlert('Sukses', res.message, 'success');
-          initData();
-          navigateTo('screen-budget');
-        }).simpanBudget({ id: b ? b.id : '', kategori: name, limit: limit });
-      }
+      fetchFromBackend("simpanBudget", { id: b ? b.id : '', kategori: name, limit: limit }, res => {
+        showAlert('Sukses', res.message, 'success');
+        initData();
+        navigateTo('screen-budget');
+      });
     }
 
     function renderBudgets() {
@@ -603,9 +600,11 @@
 
     function deleteBudget(id) {
       showAlert('Hapus Budget', 'Hapus limit anggaran ini?', 'danger', () => {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.withSuccessHandler(res => { showAlert('Dihapus', res.message, 'success'); initData(); navigateTo('screen-budget'); }).hapusBudget(id);
-        }
+        fetchFromBackend("hapusBudget", { id: id }, res => {
+          showAlert('Dihapus', res.message, 'success');
+          initData();
+          navigateTo('screen-budget');
+        });
       });
     }
 
@@ -615,13 +614,11 @@
       const jenis = prompt("Jenis (Pengeluaran/Pemasukan):", c ? c.jenis : "Pengeluaran");
       if (!jenis) return;
 
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(res => {
-          showAlert('Sukses', res.message, 'success');
-          initData();
-          navigateTo('screen-profile');
-        }).simpanKategori({ id: c ? c.id : '', nama: nama, jenis: jenis, ikon: 'tag' });
-      }
+      fetchFromBackend("simpanKategori", { id: c ? c.id : '', nama: nama, jenis: jenis, ikon: 'tag' }, res => {
+        showAlert('Sukses', res.message, 'success');
+        initData();
+        navigateTo('screen-profile');
+      });
     }
 
     function renderCategories() {
@@ -642,9 +639,11 @@
 
     function deleteCategory(id) {
       showAlert('Hapus Kategori', 'Apakah kamu yakin ingin menghapus kategori ini?', 'danger', () => {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.withSuccessHandler(res => { showAlert('Dihapus', res.message, 'success'); initData(); navigateTo('screen-profile'); }).hapusKategori(id);
-        }
+        fetchFromBackend("hapusKategori", { id: id }, res => {
+          showAlert('Dihapus', res.message, 'success');
+          initData();
+          navigateTo('screen-profile');
+        });
       });
     }
 
@@ -656,13 +655,12 @@
         suami: document.getElementById('prof-suami').value,
         istri: document.getElementById('prof-istri').value
       };
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(res => {
-          setBtnLoading('btn-save-prof', false);
-          showAlert('Berhasil', res.message, 'success');
-          initData();
-        }).simpanProfil(payload);
-      }
+
+      fetchFromBackend("simpanProfil", payload, res => {
+        setBtnLoading('btn-save-prof', false);
+        showAlert('Berhasil', res.message, 'success');
+        initData();
+      });
     }
 
     function renderMonthlyLineChart() {
