@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HomeFin - Keuangan Rumah Tangga</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -15,73 +16,139 @@
       --text-gray: #64748B;
       --green: #10B981;
       --red: #EF4444;
-      --card-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04);
+      --card-shadow: 0px 4px 12px rgba(15, 23, 42, 0.05);
       --border-color: #E2E8F0;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg-gray); display: flex; justify-content: center; color: var(--text-dark); }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #E2E8F0;
+      display: flex;
+      justify-content: center;
+      color: var(--text-dark);
+    }
 
     .screen {
       width: 100%;
-      max-width: 412px;
+      max-width: 480px;
       min-height: 100vh;
       background: #FFFFFF;
       position: relative;
       display: none;
-      padding-bottom: 75px;
+      padding-bottom: 80px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
     }
     .screen.active { display: block; }
 
-    .app-header { background: var(--primary-blue); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .sub-header { background: var(--primary-blue); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .app-header {
+      background: linear-gradient(135deg, #1976D2, #1565C0);
+      color: white;
+      padding: clamp(16px, 4vw, 24px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+
+    .sub-header {
+      background: var(--primary-blue);
+      color: white;
+      padding: 16px clamp(16px, 4vw, 20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
     .sub-header-left { display: flex; align-items: center; gap: 12px; }
-    .sub-header h2 { font-size: 1.1rem; font-weight: 600; }
+    .sub-header h2 { font-size: clamp(1rem, 3.5vw, 1.15rem); font-weight: 600; }
     .back-btn { background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center; }
 
-    .content { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-    .card { background: white; border-radius: 14px; padding: 16px; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+    .content { padding: clamp(12px, 3.5vw, 16px); display: flex; flex-direction: column; gap: 14px; }
+    .card { background: white; border-radius: 14px; padding: clamp(14px, 3.5vw, 18px); box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+
     .balance-header { display: flex; justify-content: space-between; color: var(--text-gray); font-size: 0.85rem; }
-    .balance-amount { font-size: 1.75rem; color: var(--primary-blue); margin: 8px 0 16px; font-weight: 700; }
-    .balance-summary { display: flex; gap: 12px; }
-    .summary-box { flex: 1; background: var(--light-blue); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .balance-amount { font-size: clamp(1.5rem, 5vw, 1.85rem); color: var(--primary-blue); margin: 6px 0 14px; font-weight: 700; }
+    .balance-summary { display: flex; gap: 10px; }
+    .summary-box { flex: 1; background: var(--light-blue); padding: 10px 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px; }
     .text-green { color: var(--green); font-weight: 600; }
     .text-red { color: var(--red); font-weight: 600; }
 
-    /* Buttons & Loading */
-    .btn-primary { background: var(--primary-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-danger { background: var(--red); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-    .btn-edit { background: var(--light-blue); color: var(--primary-blue); border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-primary {
+      background: var(--primary-blue);
+      color: white;
+      border: none;
+      padding: 12px clamp(16px, 4vw, 20px);
+      border-radius: 10px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-danger { background: var(--red); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-edit { background: var(--light-blue); color: var(--primary-blue); border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
     button:disabled { opacity: 0.6; cursor: not-allowed !important; }
 
-    .tab-group { display: flex; background: #F1F5F9; padding: 4px; border-radius: 8px; }
-    .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 6px; font-size: 0.85rem; color: var(--text-gray); cursor: pointer; }
-    .tab-btn.active { background: white; color: var(--primary-blue); font-weight: 600; }
+    .tab-group { display: flex; background: #F1F5F9; padding: 4px; border-radius: 10px; }
+    .tab-btn { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; color: var(--text-gray); cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: white; color: var(--primary-blue); font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    .form-container { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    .form-group label { font-size: 0.85rem; color: var(--text-gray); }
-    .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; }
+    .form-container { padding: 16px 4px; display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; color: var(--text-gray); font-weight: 500; }
+    .form-group input, .form-group select {
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      outline: none;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+    }
 
-    .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1F5F9; }
-    .item-left { display: flex; align-items: center; gap: 10px; }
-    .item-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; }
+    .item-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
+    .item-row:last-child { border-bottom: none; }
+    .item-left { display: flex; align-items: center; gap: 12px; }
+    .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; flex-shrink: 0; }
 
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 412px; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); z-index: 10; }
-    .nav-item { border: none; background: transparent; display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 0.75rem; cursor: pointer; gap: 2px; }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 480px;
+      height: 64px;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      z-index: 10;
+    }
+    .nav-item { border: none; background: transparent; display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 0.75rem; cursor: pointer; gap: 3px; }
     .nav-item.active { color: var(--primary-blue); font-weight: 600; }
-    .nav-btn-add { background: var(--primary-blue); color: white; width: 48px; height: 48px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; margin-top: -24px; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); cursor: pointer; }
+    .nav-btn-add { background: var(--primary-blue); color: white; width: 48px; height: 48px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; margin-top: -24px; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.35); cursor: pointer; }
 
     /* Login Screen UI */
-    .login-container { padding: 32px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
-    .user-select-grid { display: flex; gap: 16px; margin: 24px 0; width: 100%; }
+    .login-container { padding: clamp(24px, 6vw, 36px) 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+    .user-select-grid { display: flex; gap: 14px; margin: 24px 0; width: 100%; }
     .user-card { flex: 1; border: 2px solid var(--border-color); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
-    .user-card.selected { border-color: var(--primary-blue); background: var(--light-blue); }
+    .user-card.selected { border-color: var(--primary-blue); background: var(--light-blue); box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15); }
 
-    /* Custom Modal / Pop-up Alert */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+    /* Custom Pop-up Alert Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; backdrop-filter: blur(2px); }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: white; width: 100%; max-width: 320px; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: popIn 0.2s ease-out; }
+    .modal-card { background: white; width: 100%; max-width: 320px; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
     .modal-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
     .modal-icon.info { background: var(--light-blue); color: var(--primary-blue); }
     .modal-icon.success { background: #D1FAE5; color: var(--green); }
@@ -115,7 +182,7 @@
   <section id="screen-login" class="screen active">
     <div class="login-container">
       <div style="color:var(--primary-blue); margin-bottom:8px;"><i data-lucide="wallet" style="width:48px; height:48px;"></i></div>
-      <h1 style="color:var(--primary-blue); font-size:1.8rem;">HomeFin</h1>
+      <h1 style="color:var(--primary-blue); font-size:1.8rem; font-weight:700;">HomeFin</h1>
       <p style="color:var(--text-gray); font-size:0.9rem;">Masuk untuk Mengelola Keuangan</p>
 
       <div class="user-select-grid">
@@ -145,7 +212,7 @@
     <header class="app-header">
       <div>
         <p style="font-size: 0.9rem;">Halo, <strong id="lbl-couple-name">Doni & Ellen</strong> 👋</p>
-        <small style="opacity: 0.8;">Kelola keuangan keluarga dengan baik!</small>
+        <small style="opacity: 0.85;">Kelola keuangan keluarga dengan baik!</small>
       </div>
       <div onclick="handleLogout()" style="cursor:pointer;" title="Keluar"><i data-lucide="log-out" style="width:20px;"></i></div>
     </header>
@@ -166,26 +233,26 @@
         </div>
       </div>
 
-      <!-- Line Chart Tren -->
+      <!-- Bar Chart Grafik Keuangan -->
       <div class="card">
-        <h3 style="font-size:0.95rem;">Tren Keuangan</h3>
-        <div style="height: 150px; margin-top:8px;">
-          <canvas id="monthlyLineChart"></canvas>
+        <h3 style="font-size:0.95rem;">Grafik Bulanan (Bar Chart)</h3>
+        <div style="height: 160px; margin-top:8px;">
+          <canvas id="monthlyBarChart"></canvas>
         </div>
       </div>
 
-      <!-- List Transaksi Terakhir di Dashboard (Read-only, Tanpa Action) -->
+      <!-- List Transaksi Terakhir -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <h3 style="font-size:0.95rem;">Transaksi Terakhir</h3>
-          <a href="#" onclick="navigateTo('screen-transactions')" style="font-size:0.8rem; color:var(--primary-blue); text-decoration:none;">Lihat Semua</a>
+          <a href="#" onclick="navigateTo('screen-transactions')" style="font-size:0.8rem; color:var(--primary-blue); text-decoration:none; font-weight:500;">Lihat Semua</a>
         </div>
         <div id="dashboard-trx-list"></div>
       </div>
     </main>
   </section>
 
-  <!-- Screen 2: Form Transaksi (Input & Edit) -->
+  <!-- Screen 2: Form Transaksi -->
   <section id="screen-form-trx" class="screen">
     <div class="sub-header">
       <div class="sub-header-left">
@@ -193,29 +260,31 @@
         <h2 id="trx-form-title">Tambah Transaksi</h2>
       </div>
     </div>
-    <form class="form-container" onsubmit="handleSaveTrx(event)">
-      <input type="hidden" id="trx-id">
-      <div class="form-group">
-        <label>Jenis Transaksi</label>
-        <select id="trx-jenis" onchange="populateCategoryOptions()">
-          <option value="Pengeluaran">Pengeluaran</option>
-          <option value="Pemasukan">Pemasukan</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Dicatat Oleh</label>
-        <select id="trx-pengguna"><option value="Doni">Doni</option><option value="Ellen">Ellen</option></select>
-      </div>
-      <div class="form-group"><label>Tanggal</label><input type="date" id="trx-tanggal" required></div>
-      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="trx-jumlah" required min="1"></div>
-      <div class="form-group">
-        <label>Kategori</label>
-        <select id="trx-kategori" required></select>
-      </div>
-      <div class="form-group"><label>Metode Pembayaran</label><select id="trx-metode"><option>Transfer Bank</option><option>Cash</option></select></div>
-      <div class="form-group"><label>Catatan</label><input type="text" id="trx-catatan"></div>
-      <button type="submit" class="btn-primary" id="btn-save-trx"><span>Simpan Transaksi</span></button>
-    </form>
+    <div class="content">
+      <form class="form-container" onsubmit="handleSaveTrx(event)">
+        <input type="hidden" id="trx-id">
+        <div class="form-group">
+          <label>Jenis Transaksi</label>
+          <select id="trx-jenis" onchange="populateCategoryOptions()">
+            <option value="Pengeluaran">Pengeluaran</option>
+            <option value="Pemasukan">Pemasukan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dicatat Oleh</label>
+          <select id="trx-pengguna"><option value="Doni">Doni</option><option value="Ellen">Ellen</option></select>
+        </div>
+        <div class="form-group"><label>Tanggal</label><input type="date" id="trx-tanggal" required></div>
+        <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="trx-jumlah" required min="1"></div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="trx-kategori" required></select>
+        </div>
+        <div class="form-group"><label>Metode Pembayaran</label><select id="trx-metode"><option>Transfer Bank</option><option>Cash</option></select></div>
+        <div class="form-group"><label>Catatan</label><input type="text" id="trx-catatan" placeholder="Opsional"></div>
+        <button type="submit" class="btn-primary" id="btn-save-trx"><span>Simpan Transaksi</span></button>
+      </form>
+    </div>
   </section>
 
   <!-- Screen 3: Daftar Transaksi -->
@@ -287,9 +356,9 @@
   </nav>
 
   <script>
-    // MASUKKAN URL WEB APP APPS SCRIPT DI SINI
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX-v0_baDOCAo0lCW7kASzbJme3VN3d4tFNDO2KRpeKMcZwY2ngx01El0RiKbbqsO0xQ/exec";
+    const APPS_SCRIPT_URL = "GANTI_DENGAN_URL_DEPLOYMENT_WEB_APP_KAMU";
 
+    // Fast Cache Local State for Optimized Operations
     let appData = { 
       transactions: [], 
       budgets: [], 
@@ -298,21 +367,20 @@
     };
 
     let selectedLoginUser = 'suami';
-    let monthlyLineChart = null;
+    let monthlyBarChart = null;
 
     function formatRupiah(num) { return 'Rp ' + Number(num || 0).toLocaleString('id-ID'); }
 
-    // ----------------- API CONNECTOR FOR GITHUB PAGES ----------------- //
+    // ----------------- OPTIMIZED API CONNECTOR ----------------- //
 
     function fetchFromBackend(action, payloadData = null, onSuccess = null) {
-      if (APPS_SCRIPT_URL === "GANTI_DENGAN_URL_DEPLOYMENT_WEB_APP_KAMU") {
+      if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxX-v0_baDOCAo0lCW7kASzbJme3VN3d4tFNDO2KRpeKMcZwY2ngx01El0RiKbbqsO0xQ/exec") {
         console.warn("URL Apps Script belum diset. Menjalankan fungsi secara lokal.");
         if (onSuccess) onSuccess({ status: "success", message: "Proses berhasil (Mode Lokal)" });
         return;
       }
 
       if (payloadData) {
-        // POST Request
         fetch(APPS_SCRIPT_URL, {
           method: "POST",
           mode: "cors",
@@ -325,7 +393,6 @@
           showAlert('Error', 'Gagal terhubung ke Google Apps Script: ' + err, 'danger');
         });
       } else {
-        // GET Request
         fetch(APPS_SCRIPT_URL + "?action=" + action)
         .then(res => res.json())
         .then(data => { if (onSuccess) onSuccess(data); })
@@ -335,7 +402,7 @@
       }
     }
 
-    // ----------------- LOGIN LOGIC ----------------- //
+    // ----------------- LOGIN LOGIC & VALIDATION ----------------- //
 
     function selectLoginUser(role) {
       selectedLoginUser = role;
@@ -344,22 +411,31 @@
     }
 
     function handleLogin() {
-      const pin = document.getElementById('login-pin').value;
-      if (pin === '1234' || pin === '') {
+      const pinInput = document.getElementById('login-pin');
+      const pin = pinInput.value.trim();
+
+      if (!pin) {
+        showAlert('Peringatan', 'Silakan masukkan PIN / Password kamu terlebih dahulu!', 'danger');
+        pinInput.focus();
+        return;
+      }
+
+      if (pin === '1234') {
         initData();
         navigateTo('screen-dashboard');
       } else {
-        showAlert('Login Gagal', 'PIN yang kamu masukkan salah. (Default: 1234)', 'danger');
+        showAlert('Login Gagal', 'PIN yang kamu masukkan salah. (Default PIN: 1234)', 'danger');
       }
     }
 
     function handleLogout() {
       showAlert('Keluar', 'Apakah kamu yakin ingin keluar dari akun?', 'info', () => {
+        document.getElementById('login-pin').value = '';
         navigateTo('screen-login');
       });
     }
 
-    // ----------------- CUSTOM ALERT & CONFIRM MODAL ----------------- //
+    // ----------------- CUSTOM ALERT MODAL ----------------- //
 
     function showAlert(title, message, type = 'success', onConfirm = null) {
       document.getElementById('modal-title').innerText = title;
@@ -404,6 +480,13 @@
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(screenId).classList.add('active');
       
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick').includes(screenId)) {
+          btn.classList.add('active');
+        }
+      });
+
       if (screenId === 'screen-dashboard') renderDashboardTrxList();
       if (screenId === 'screen-transactions') renderTransactions(appData.transactions);
       if (screenId === 'screen-budget') renderBudgets();
@@ -441,7 +524,7 @@
       document.getElementById('dash-pengeluaran').innerText = formatRupiah(exp);
 
       populateCategoryOptions();
-      renderMonthlyLineChart();
+      renderMonthlyBarChart();
       renderDashboardTrxList();
     }
 
@@ -460,7 +543,7 @@
     function renderDashboardTrxList() {
       const container = document.getElementById('dashboard-trx-list');
       if (!container) return;
-      container.innerHTML = appData.transactions.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray);">Belum ada transaksi</p>' : '';
+      container.innerHTML = appData.transactions.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray); font-size:0.85rem;">Belum ada transaksi</p>' : '';
       
       const recent = appData.transactions.slice().reverse().slice(0, 5);
       recent.forEach(t => {
@@ -481,7 +564,7 @@
       lucide.createIcons();
     }
 
-    // ----------------- HANDLERS TRANSAKSI (CRUD) ----------------- //
+    // ----------------- HANDLERS TRANSAKSI ----------------- //
 
     function openTrxForm(data = null) {
       document.getElementById('trx-id').value = data ? data.id : '';
@@ -532,7 +615,7 @@
 
     function renderTransactions(list) {
       const container = document.getElementById('trx-list-container');
-      container.innerHTML = list.length === 0 ? '<p style="text-align:center; padding:10px;">Belum ada data</p>' : '';
+      container.innerHTML = list.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray); font-size:0.85rem;">Belum ada data</p>' : '';
       list.slice().reverse().forEach(t => {
         const isInc = t.jenis === 'Pemasukan';
         container.innerHTML += `
@@ -584,7 +667,7 @@
         tot += Number(b.limit);
         container.innerHTML += `
           <div style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong>${b.kategori}</strong>
               <div>
                 <button class="btn-edit" onclick='openBudgetForm(${JSON.stringify(b)})'>Edit</button>
@@ -663,9 +746,11 @@
       });
     }
 
-    function renderMonthlyLineChart() {
-      const ctx = document.getElementById('monthlyLineChart').getContext('2d');
-      if (monthlyLineChart) monthlyLineChart.destroy();
+    // ----------------- BAR CHART GRAFIK DASHBOARD ----------------- //
+
+    function renderMonthlyBarChart() {
+      const ctx = document.getElementById('monthlyBarChart').getContext('2d');
+      if (monthlyBarChart) monthlyBarChart.destroy();
 
       const groupedData = {};
       appData.transactions.forEach(t => {
@@ -678,20 +763,33 @@
       const incData = dates.map(d => groupedData[d].inc);
       const expData = dates.map(d => groupedData[d].exp);
 
-      monthlyLineChart = new Chart(ctx, {
-        type: 'line',
+      monthlyBarChart = new Chart(ctx, {
+        type: 'bar',
         data: {
           labels: dates.length ? dates : ['Hari ini'],
           datasets: [
-            { label: 'Pemasukan', data: incData.length ? incData : [0], borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, fill: true },
-            { label: 'Pengeluaran', data: expData.length ? expData : [0], borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.4, fill: true }
+            {
+              label: 'Pemasukan',
+              data: incData.length ? incData : [0],
+              backgroundColor: '#10B981',
+              borderRadius: 4
+            },
+            {
+              label: 'Pengeluaran',
+              data: expData.length ? expData : [0],
+              backgroundColor: '#EF4444',
+              borderRadius: 4
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: true, position: 'bottom' } },
-          scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [4, 4] } } }
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { borderDash: [4, 4] } }
+          }
         }
       });
     }
