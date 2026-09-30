@@ -24,13 +24,15 @@
     
     html, body {
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       background-color: #E2E8F0;
       display: flex;
       justify-content: center;
       color: var(--text-dark);
+      overflow-x: hidden;
     }
 
+    /* Perbaikan Scroll Container */
     .screen {
       width: 100%;
       max-width: 480px;
@@ -38,7 +40,7 @@
       background: #FFFFFF;
       position: relative;
       display: none;
-      padding-bottom: 80px;
+      padding-bottom: 100px;
       box-shadow: 0 0 20px rgba(0,0,0,0.05);
     }
     .screen.active { display: block; }
@@ -64,7 +66,6 @@
     }
     .sub-header-left { display: flex; align-items: center; gap: 12px; }
     .sub-header h2 { font-size: clamp(1rem, 3.5vw, 1.15rem); font-weight: 600; }
-    .back-btn { background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center; }
 
     .content { padding: clamp(12px, 3.5vw, 16px); display: flex; flex-direction: column; gap: 14px; }
     .card { background: white; border-radius: 14px; padding: clamp(14px, 3.5vw, 18px); box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
@@ -101,7 +102,6 @@
     .tab-btn { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; color: var(--text-gray); cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { background: white; color: var(--primary-blue); font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    .form-container { padding: 16px 4px; display: flex; flex-direction: column; gap: 14px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group label { font-size: 0.85rem; color: var(--text-gray); font-weight: 500; text-align: left; }
     .form-group input, .form-group select {
@@ -121,6 +121,10 @@
     .item-row:last-child { border-bottom: none; }
     .item-left { display: flex; align-items: center; gap: 12px; }
     .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; flex-shrink: 0; }
+
+    /* Progress bar untuk Pengeluaran per Kategori */
+    .cat-progress-bg { background: #F1F5F9; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .cat-progress-fill { background: var(--red); height: 100%; border-radius: 4px; transition: width 0.3s ease; }
 
     /* Bottom Nav */
     .bottom-nav {
@@ -150,7 +154,7 @@
     /* Custom Modals */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; backdrop-filter: blur(2px); }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: white; width: 100%; max-width: 340px; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
+    .modal-card { background: white; width: 100%; max-width: 360px; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
     .modal-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
     .modal-icon.info { background: var(--light-blue); color: var(--primary-blue); }
     .modal-icon.success { background: #D1FAE5; color: var(--green); }
@@ -162,7 +166,6 @@
     .modal-btn-sec { background: #F1F5F9; color: var(--text-dark); }
 
     .spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 2px solid white; width: 12px; height: 12px; animation: spin 0.8s linear infinite; display: inline-block; }
-    .spinner-dark { border: 2px solid rgba(15, 23, 42, 0.2); border-top: 2px solid var(--text-dark); }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   </style>
@@ -181,7 +184,7 @@
     </div>
   </div>
 
-  <!-- Custom Input Pop-up Modal (Budget & Kategori UI) -->
+  <!-- Custom Input Pop-up Modal (Transaksi, Budget & Kategori UI) -->
   <div class="modal-overlay" id="form-modal">
     <div class="modal-card" style="text-align: left;">
       <h3 class="modal-title" id="form-modal-title" style="margin-bottom: 14px;">Tambah Data</h3>
@@ -255,56 +258,21 @@
         </div>
       </div>
 
+      <!-- Dashboard Update: Total Pengeluaran per Kategori -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <h3 style="font-size:0.95rem;">Transaksi Terakhir</h3>
-          <a href="#" onclick="navigateTo('screen-transactions')" style="font-size:0.8rem; color:var(--primary-blue); text-decoration:none; font-weight:500;">Lihat Semua</a>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="font-size:0.95rem;">Pengeluaran Per Kategori</h3>
+          <a href="#" onclick="navigateTo('screen-transactions')" style="font-size:0.8rem; color:var(--primary-blue); text-decoration:none; font-weight:500;">Lihat Transaksi</a>
         </div>
-        <div id="dashboard-trx-list"></div>
+        <div id="dashboard-category-expenses"></div>
       </div>
     </main>
   </section>
 
-  <!-- Screen 2: Form Transaksi -->
-  <section id="screen-form-trx" class="screen">
-    <div class="sub-header">
-      <div class="sub-header-left">
-        <button class="back-btn" onclick="navigateTo('screen-dashboard')"><i data-lucide="arrow-left"></i></button>
-        <h2 id="trx-form-title">Tambah Transaksi</h2>
-      </div>
-    </div>
-    <div class="content">
-      <form class="form-container" onsubmit="handleSaveTrx(event)">
-        <input type="hidden" id="trx-id">
-        <div class="form-group">
-          <label>Jenis Transaksi</label>
-          <select id="trx-jenis" onchange="populateCategoryOptions()">
-            <option value="Pengeluaran">Pengeluaran</option>
-            <option value="Pemasukan">Pemasukan</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Dicatat Oleh</label>
-          <select id="trx-pengguna"><option value="Doni">Doni</option><option value="Ellen">Ellen</option></select>
-        </div>
-        <div class="form-group"><label>Tanggal</label><input type="date" id="trx-tanggal" required></div>
-        <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="trx-jumlah" required min="1"></div>
-        <div class="form-group">
-          <label>Kategori</label>
-          <select id="trx-kategori" required></select>
-        </div>
-        <div class="form-group"><label>Metode Pembayaran</label><select id="trx-metode"><option>Transfer Bank</option><option>Cash</option></select></div>
-        <div class="form-group"><label>Catatan</label><input type="text" id="trx-catatan" placeholder="Opsional"></div>
-        <button type="submit" class="btn-primary" id="btn-save-trx"><span>Simpan Transaksi</span></button>
-      </form>
-    </div>
-  </section>
-
-  <!-- Screen 3: Daftar Transaksi -->
+  <!-- Screen 2: Daftar Transaksi -->
   <section id="screen-transactions" class="screen">
     <div class="sub-header">
       <div class="sub-header-left">
-        <button class="back-btn" onclick="navigateTo('screen-dashboard')"><i data-lucide="arrow-left"></i></button>
         <h2>Daftar Transaksi</h2>
       </div>
       <button class="btn-edit" onclick="openTrxForm()">+ Baru</button>
@@ -319,7 +287,7 @@
     </div>
   </section>
 
-  <!-- Screen 4: Budget Bulanan -->
+  <!-- Screen 3: Budget Bulanan -->
   <section id="screen-budget" class="screen">
     <div class="sub-header">
       <h2>Budget Bulanan</h2>
@@ -334,7 +302,7 @@
     </div>
   </section>
 
-  <!-- Screen 5: Kelola Kategori & Profil -->
+  <!-- Screen 4: Kelola Kategori & Profil -->
   <section id="screen-profile" class="screen">
     <div class="sub-header">
       <h2>Pengaturan & Kategori</h2>
@@ -416,7 +384,6 @@
       }
     }
 
-    // Helper Universal untuk Buffering / Loading Button
     function setBtnLoading(btn, isLoading, loadingText = 'Memproses...') {
       if (!btn) return;
       if (typeof btn === 'string') btn = document.getElementById(btn);
@@ -474,14 +441,15 @@
       }, 300);
     }
 
+    /* Perbaikan Logout: tidak memicu tombol hapus / loading berulang */
     function handleLogout() {
-      showAlert('Keluar', 'Apakah kamu yakin ingin keluar dari akun?', 'info', () => {
+      showConfirmModal('Keluar', 'Apakah kamu yakin ingin keluar dari akun?', () => {
         document.getElementById('login-pin').value = '';
         navigateTo('screen-login');
       });
     }
 
-    function showAlert(title, message, type = 'success', onConfirm = null) {
+    function showAlert(title, message, type = 'success') {
       document.getElementById('modal-title').innerText = title;
       document.getElementById('modal-message').innerText = message;
       
@@ -489,18 +457,29 @@
       iconBox.className = 'modal-icon ' + (type === 'danger' ? 'danger' : type === 'success' ? 'success' : 'info');
       
       const actions = document.getElementById('modal-actions');
-      if (onConfirm) {
-        actions.innerHTML = `
-          <button class="modal-btn modal-btn-sec" onclick="closeModal()">Batal</button>
-          <button class="modal-btn btn-primary" style="background:var(--red);" id="btn-modal-confirm"><span>Ya, Lanjutkan</span></button>
-        `;
-        document.getElementById('btn-modal-confirm').onclick = (e) => { 
-          setBtnLoading(e.currentTarget, true, 'Menghapus...');
-          onConfirm(e.currentTarget); 
-        };
-      } else {
-        actions.innerHTML = `<button class="modal-btn btn-primary" onclick="closeModal()">OK</button>`;
-      }
+      actions.innerHTML = `<button class="modal-btn btn-primary" onclick="closeModal()">OK</button>`;
+
+      document.getElementById('custom-modal').classList.add('active');
+      lucide.createIcons();
+    }
+
+    function showConfirmModal(title, message, onConfirm) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-message').innerText = message;
+      
+      const iconBox = document.getElementById('modal-icon');
+      iconBox.className = 'modal-icon info';
+      
+      const actions = document.getElementById('modal-actions');
+      actions.innerHTML = `
+        <button class="modal-btn modal-btn-sec" onclick="closeModal()">Batal</button>
+        <button class="modal-btn btn-primary" id="btn-modal-confirm"><span>Ya, Lanjutkan</span></button>
+      `;
+
+      document.getElementById('btn-modal-confirm').onclick = () => {
+        closeModal();
+        if (onConfirm) onConfirm();
+      };
 
       document.getElementById('custom-modal').classList.add('active');
       lucide.createIcons();
@@ -541,11 +520,12 @@
         }
       });
 
-      if (screenId === 'screen-dashboard') renderDashboardTrxList();
+      if (screenId === 'screen-dashboard') renderDashboardCategoryExpenses();
       if (screenId === 'screen-transactions') renderTransactions(appData.transactions);
       if (screenId === 'screen-budget') renderBudgets();
       if (screenId === 'screen-profile') renderCategories();
       
+      window.scrollTo(0, 0);
       lucide.createIcons();
     }
 
@@ -565,9 +545,6 @@
       document.getElementById('prof-suami').value = appData.profile.suami;
       document.getElementById('prof-istri').value = appData.profile.istri;
 
-      const pSelect = document.getElementById('trx-pengguna');
-      pSelect.innerHTML = `<option value="${appData.profile.suami}">${appData.profile.suami}</option><option value="${appData.profile.istri}">${appData.profile.istri}</option>`;
-
       let inc = 0, exp = 0;
       appData.transactions.forEach(t => {
         if (t.jenis === 'Pemasukan') inc += Number(t.jumlah);
@@ -577,87 +554,129 @@
       document.getElementById('dash-pemasukan').innerText = formatRupiah(inc);
       document.getElementById('dash-pengeluaran').innerText = formatRupiah(exp);
 
-      populateCategoryOptions();
       renderMonthlyBarChart();
-      renderDashboardTrxList();
+      renderDashboardCategoryExpenses();
     }
 
-    function populateCategoryOptions() {
-      const jenis = document.getElementById('trx-jenis').value;
-      const select = document.getElementById('trx-kategori');
-      select.innerHTML = '';
-      const filtered = appData.categories.filter(c => c.jenis === jenis);
-      filtered.forEach(c => {
-        select.innerHTML += `<option value="${c.nama}">${c.nama}</option>`;
-      });
-    }
-
-    function renderDashboardTrxList() {
-      const container = document.getElementById('dashboard-trx-list');
+    /* Dashboard: Render Total Pengeluaran Per Kategori */
+    function renderDashboardCategoryExpenses() {
+      const container = document.getElementById('dashboard-category-expenses');
       if (!container) return;
-      container.innerHTML = appData.transactions.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray); font-size:0.85rem;">Belum ada transaksi</p>' : '';
-      
-      const recent = appData.transactions.slice().reverse().slice(0, 5);
-      recent.forEach(t => {
-        const isInc = t.jenis === 'Pemasukan';
-        container.innerHTML += `
-          <div class="item-row">
-            <div class="item-left">
-              <div class="item-icon"><i data-lucide="${isInc ? 'arrow-down-left' : 'shopping-bag'}" style="width:16px;"></i></div>
-              <div>
-                <strong style="font-size:0.85rem;">${t.kategori}</strong> <small style="color:var(--text-gray);">(${t.pengguna})</small><br>
-                <small style="color:var(--text-gray);">${t.tanggal}</small>
+
+      const expCategories = appData.categories.filter(c => c.jenis === 'Pengeluaran');
+      const catTotals = {};
+      let totalExp = 0;
+
+      appData.transactions.forEach(t => {
+        if (t.jenis === 'Pengeluaran') {
+          catTotals[t.kategori] = (catTotals[t.kategori] || 0) + Number(t.jumlah);
+          totalExp += Number(t.jumlah);
+        }
+      });
+
+      if (Object.keys(catTotals).length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:10px; color:var(--text-gray); font-size:0.85rem;">Belum ada pengeluaran</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      expCategories.forEach(c => {
+        const amount = catTotals[c.nama] || 0;
+        if (amount > 0) {
+          const percent = totalExp > 0 ? Math.round((amount / totalExp) * 100) : 0;
+          container.innerHTML += `
+            <div style="margin-bottom: 12px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                <strong>${c.nama}</strong>
+                <span class="text-red" style="font-weight:600;">${formatRupiah(amount)} (${percent}%)</span>
+              </div>
+              <div class="cat-progress-bg">
+                <div class="cat-progress-fill" style="width: ${percent}%;"></div>
               </div>
             </div>
-            <strong class="${isInc ? 'text-green' : 'text-red'}" style="font-size:0.85rem;">${isInc ? '+' : '-'}${formatRupiah(t.jumlah)}</strong>
-          </div>
-        `;
-      });
-      lucide.createIcons();
-    }
-
-    function openTrxForm(data = null) {
-      document.getElementById('trx-id').value = data ? data.id : '';
-      document.getElementById('trx-jenis').value = data ? data.jenis : 'Pengeluaran';
-      populateCategoryOptions();
-      document.getElementById('trx-pengguna').value = data ? data.pengguna : appData.profile.suami;
-      document.getElementById('trx-tanggal').value = data ? data.tanggal : new Date().toISOString().split('T')[0];
-      document.getElementById('trx-jumlah').value = data ? data.jumlah : '';
-      document.getElementById('trx-kategori').value = data ? data.kategori : '';
-      document.getElementById('trx-metode').value = data ? data.metode : 'Transfer Bank';
-      document.getElementById('trx-catatan').value = data ? data.catatan : '';
-      document.getElementById('trx-form-title').innerText = data ? 'Edit Transaksi' : 'Tambah Transaksi';
-      navigateTo('screen-form-trx');
-    }
-
-    function handleSaveTrx(e) {
-      e.preventDefault();
-      setBtnLoading('btn-save-trx', true, 'Simpan Data...');
-
-      const payload = {
-        id: document.getElementById('trx-id').value,
-        jenis: document.getElementById('trx-jenis').value,
-        pengguna: document.getElementById('trx-pengguna').value,
-        tanggal: document.getElementById('trx-tanggal').value,
-        jumlah: document.getElementById('trx-jumlah').value,
-        kategori: document.getElementById('trx-kategori').value,
-        metode: document.getElementById('trx-metode').value,
-        catatan: document.getElementById('trx-catatan').value
-      };
-
-      fetchFromBackend("simpanTransaksi", payload, res => {
-        setBtnLoading('btn-save-trx', false);
-        showAlert('Berhasil', res.message, 'success');
-        initData();
-        navigateTo('screen-transactions');
+          `;
+        }
       });
     }
 
-    function deleteTrx(id, btnElement) {
-      showAlert('Hapus Transaksi', 'Apakah kamu yakin ingin menghapus data transaksi ini?', 'danger', (confirmBtn) => {
-        if (btnElement) setBtnLoading(btnElement, true, 'Hapus...');
+    // ----------------- TRANSAKSI MODAL FORM CUSTOM UI ----------------- //
+
+    function openTrxForm(t = null) {
+      const catOptions = appData.categories
+        .map(c => `<option value="${c.nama}" ${t && t.kategori === c.nama ? 'selected' : ''}>${c.nama} (${c.jenis})</option>`)
+        .join('');
+
+      const html = `
+        <input type="hidden" id="pop-trx-id" value="${t ? t.id : ''}">
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Jenis Transaksi</label>
+          <select id="pop-trx-jenis">
+            <option value="Pengeluaran" ${t && t.jenis === 'Pengeluaran' ? 'selected' : ''}>Pengeluaran</option>
+            <option value="Pemasukan" ${t && t.jenis === 'Pemasukan' ? 'selected' : ''}>Pemasukan</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Dicatat Oleh</label>
+          <select id="pop-trx-pengguna">
+            <option value="${appData.profile.suami}" ${t && t.pengguna === appData.profile.suami ? 'selected' : ''}>${appData.profile.suami}</option>
+            <option value="${appData.profile.istri}" ${t && t.pengguna === appData.profile.istri ? 'selected' : ''}>${appData.profile.istri}</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Tanggal</label>
+          <input type="date" id="pop-trx-tanggal" value="${t ? t.tanggal : new Date().toISOString().split('T')[0]}">
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Jumlah (Rp)</label>
+          <input type="number" id="pop-trx-jumlah" value="${t ? t.jumlah : ''}" placeholder="100000">
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Kategori</label>
+          <select id="pop-trx-kategori">${catOptions}</select>
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Metode Pembayaran</label>
+          <select id="pop-trx-metode">
+            <option ${t && t.metode === 'Transfer Bank' ? 'selected' : ''}>Transfer Bank</option>
+            <option ${t && t.metode === 'Cash' ? 'selected' : ''}>Cash</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Catatan</label>
+          <input type="text" id="pop-trx-catatan" value="${t ? t.catatan || '' : ''}" placeholder="Opsional">
+        </div>
+      `;
+
+      openFormModal(t ? 'Edit Transaksi' : 'Tambah Transaksi', html, (submitBtn) => {
+        const payload = {
+          id: document.getElementById('pop-trx-id').value,
+          jenis: document.getElementById('pop-trx-jenis').value,
+          pengguna: document.getElementById('pop-trx-pengguna').value,
+          tanggal: document.getElementById('pop-trx-tanggal').value,
+          jumlah: document.getElementById('pop-trx-jumlah').value,
+          kategori: document.getElementById('pop-trx-kategori').value,
+          metode: document.getElementById('pop-trx-metode').value,
+          catatan: document.getElementById('pop-trx-catatan').value
+        };
+
+        if (!payload.jumlah || payload.jumlah <= 0) {
+          showAlert('Error', 'Jumlah transaksi wajib diisi!', 'danger');
+          return;
+        }
+
+        setBtnLoading(submitBtn, true, 'Menyimpan...');
+        fetchFromBackend("simpanTransaksi", payload, res => {
+          closeFormModal();
+          showAlert('Sukses', res.message, 'success');
+          initData();
+          navigateTo('screen-transactions');
+        });
+      });
+    }
+
+    function deleteTrx(id) {
+      showConfirmModal('Hapus Transaksi', 'Apakah kamu yakin ingin menghapus transaksi ini?', () => {
         fetchFromBackend("hapusTransaksi", { id: id }, res => {
-          closeModal();
           showAlert('Dihapus', res.message, 'success');
           initData();
           navigateTo('screen-transactions');
@@ -682,7 +701,7 @@
             <div style="text-align:right;">
               <strong class="${isInc ? 'text-green' : 'text-red'}">${isInc ? '+' : '-'}${formatRupiah(t.jumlah)}</strong><br>
               <button class="btn-edit" onclick='openTrxForm(${JSON.stringify(t)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteTrx('${t.id}', this)"><span>Hapus</span></button>
+              <button class="btn-danger" onclick="deleteTrx('${t.id}')"><span>Hapus</span></button>
             </div>
           </div>
         `;
@@ -696,7 +715,7 @@
       renderTransactions(type === 'semua' ? appData.transactions : appData.transactions.filter(t => t.jenis === type));
     }
 
-    // ----------------- BUDGET HANDLER WITH LOADING ----------------- //
+    // ----------------- BUDGET HANDLER ----------------- //
 
     function openBudgetForm(b = null) {
       const html = `
@@ -738,7 +757,7 @@
               <strong>${b.kategori}</strong>
               <div>
                 <button class="btn-edit" onclick='openBudgetForm(${JSON.stringify(b)})'>Edit</button>
-                <button class="btn-danger" onclick="deleteBudget('${b.id}', this)"><span>Hapus</span></button>
+                <button class="btn-danger" onclick="deleteBudget('${b.id}')"><span>Hapus</span></button>
               </div>
             </div>
             <small style="color:var(--text-gray);">Limit: ${formatRupiah(b.limit)}</small>
@@ -748,11 +767,9 @@
       document.getElementById('bg-total-limit').innerText = formatRupiah(tot);
     }
 
-    function deleteBudget(id, btnElement) {
-      showAlert('Hapus Budget', 'Hapus limit anggaran ini?', 'danger', (confirmBtn) => {
-        if (btnElement) setBtnLoading(btnElement, true, 'Hapus...');
+    function deleteBudget(id) {
+      showConfirmModal('Hapus Budget', 'Hapus limit anggaran ini?', () => {
         fetchFromBackend("hapusBudget", { id: id }, res => {
-          closeModal();
           showAlert('Dihapus', res.message, 'success');
           initData();
           navigateTo('screen-budget');
@@ -760,7 +777,7 @@
       });
     }
 
-    // ----------------- KATEGORI HANDLER WITH LOADING ----------------- //
+    // ----------------- KATEGORI HANDLER ----------------- //
 
     function openCategoryForm(c = null) {
       const html = `
@@ -802,18 +819,16 @@
             <div><strong>${c.nama}</strong> <small>(${c.jenis})</small></div>
             <div>
               <button class="btn-edit" onclick='openCategoryForm(${JSON.stringify(c)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteCategory('${c.id}', this)"><span>Hapus</span></button>
+              <button class="btn-danger" onclick="deleteCategory('${c.id}')"><span>Hapus</span></button>
             </div>
           </div>
         `;
       });
     }
 
-    function deleteCategory(id, btnElement) {
-      showAlert('Hapus Kategori', 'Apakah kamu yakin ingin menghapus kategori ini?', 'danger', (confirmBtn) => {
-        if (btnElement) setBtnLoading(btnElement, true, 'Hapus...');
+    function deleteCategory(id) {
+      showConfirmModal('Hapus Kategori', 'Apakah kamu yakin ingin menghapus kategori ini?', () => {
         fetchFromBackend("hapusKategori", { id: id }, res => {
-          closeModal();
           showAlert('Dihapus', res.message, 'success');
           initData();
           navigateTo('screen-profile');
