@@ -369,13 +369,22 @@
 
     function formatRupiah(num) { return 'Rp ' + Number(num || 0).toLocaleString('id-ID'); }
 
+    function getTodayString() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = ("0" + (now.getMonth() + 1)).slice(-2);
+      const day = ("0" + now.getDate()).slice(-2);
+      return `${year}-${month}-${day}`;
+    }
+
     function formatShortDate(dateStr) {
       if (!dateStr) return '';
-      const parts = dateStr.split('-');
+      const cleanStr = String(dateStr).trim().split('T')[0];
+      const parts = cleanStr.split('-');
       if (parts.length === 3) {
         return parts[2] + '/' + parts[1];
       }
-      return dateStr;
+      return cleanStr;
     }
 
     function fetchFromBackend(action, payloadData = null, onSuccess = null) {
@@ -578,7 +587,6 @@
       lucide.createIcons();
     }
 
-    // --- FITUR POP-UP DETAIL KATEGORI --- //
     function openCategoryDetailModal(categoryName) {
       const filteredTrx = appData.transactions.filter(t => t.kategori === categoryName);
       let total = 0;
@@ -698,6 +706,8 @@
         .map(c => `<option value="${c.nama}" ${t && t.kategori === c.nama ? 'selected' : ''}>${c.nama} (${c.jenis})</option>`)
         .join('');
 
+      const defaultDate = t && t.tanggal ? String(t.tanggal).trim().split('T')[0] : getTodayString();
+
       const html = `
         <input type="hidden" id="pop-trx-id" value="${t ? t.id : ''}">
         <div class="form-group" style="margin-bottom: 10px;">
@@ -715,8 +725,8 @@
           </select>
         </div>
         <div class="form-group" style="margin-bottom: 10px;">
-          <label>Tanggal</label>
-          <input type="date" id="pop-trx-tanggal" value="${t ? t.tanggal : new Date().toISOString().split('T')[0]}">
+          <label>Tanggal Transaksi</label>
+          <input type="date" id="pop-trx-tanggal" required>
         </div>
         <div class="form-group" style="margin-bottom: 10px;">
           <label>Jumlah (Rp)</label>
@@ -740,16 +750,23 @@
       `;
 
       openFormModal(t ? 'Edit Transaksi' : 'Tambah Transaksi', html, (submitBtn) => {
+        const dateInputVal = document.getElementById('pop-trx-tanggal').value;
+
         const payload = {
           id: document.getElementById('pop-trx-id').value,
           jenis: document.getElementById('pop-trx-jenis').value,
           pengguna: document.getElementById('pop-trx-pengguna').value,
-          tanggal: document.getElementById('pop-trx-tanggal').value,
+          tanggal: dateInputVal || getTodayString(),
           jumlah: document.getElementById('pop-trx-jumlah').value,
           kategori: document.getElementById('pop-trx-kategori').value,
           metode: document.getElementById('pop-trx-metode').value,
           catatan: document.getElementById('pop-trx-catatan').value
         };
+
+        if (!payload.tanggal) {
+          showAlert('Error', 'Tanggal transaksi wajib diisi!', 'danger');
+          return;
+        }
 
         if (!payload.jumlah || payload.jumlah <= 0) {
           showAlert('Error', 'Jumlah transaksi wajib diisi!', 'danger');
@@ -763,6 +780,12 @@
           initData();
         });
       }, true);
+
+      // Pengisian nilai elemen tanggal secara eksplisit agar bebas dari bug penanggalan
+      setTimeout(() => {
+        const inputElem = document.getElementById('pop-trx-tanggal');
+        if (inputElem) inputElem.value = defaultDate;
+      }, 50);
     }
 
     function deleteTrx(id) {
