@@ -24,23 +24,24 @@
     
     html, body {
       width: 100%;
-      min-height: 100%;
+      height: 100%;
       background-color: #E2E8F0;
       display: flex;
       justify-content: center;
       color: var(--text-dark);
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     .screen {
       width: 100%;
       max-width: 480px;
-      min-height: 100vh;
+      height: 100vh;
       background: #FFFFFF;
       position: relative;
       display: none;
-      padding-bottom: 100px;
+      padding-bottom: 90px;
       box-shadow: 0 0 20px rgba(0,0,0,0.05);
+      overflow-y: auto; /* Memastikan scroll terjadi di dalam screen agar sticky header bekerja */
     }
     .screen.active { display: block; }
 
@@ -48,7 +49,7 @@
     .app-header {
       background: linear-gradient(135deg, #1976D2, #1565C0);
       color: white;
-      padding: clamp(16px, 4vw, 24px);
+      padding: clamp(16px, 4vw, 20px);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -56,7 +57,8 @@
       border-bottom-right-radius: 16px;
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 100;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     .sub-header {
@@ -68,7 +70,8 @@
       justify-content: space-between;
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 100;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     .sub-header-left { display: flex; align-items: center; gap: 12px; }
     .sub-header h2 { font-size: clamp(1rem, 3.5vw, 1.15rem); font-weight: 600; }
@@ -128,6 +131,16 @@
     .item-left { display: flex; align-items: center; gap: 12px; }
     .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; flex-shrink: 0; }
 
+    .cat-item-clickable {
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .cat-item-clickable:hover, .cat-item-clickable:active {
+      background-color: var(--light-blue);
+    }
+
     .cat-progress-bg { background: #F1F5F9; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
     .cat-progress-fill { background: var(--red); height: 100%; border-radius: 4px; transition: width 0.3s ease; }
 
@@ -143,7 +156,7 @@
       justify-content: space-around;
       align-items: center;
       border-top: 1px solid var(--border-color);
-      z-index: 10;
+      z-index: 110;
     }
     .bottom-nav.active { display: flex; }
     .nav-item { border: none; background: transparent; display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 0.75rem; cursor: pointer; gap: 3px; }
@@ -189,7 +202,7 @@
     </div>
   </div>
 
-  <!-- Custom Input Pop-up Modal (Transaksi, Budget & Kategori UI) -->
+  <!-- Custom Input Pop-up Modal -->
   <div class="modal-overlay" id="form-modal">
     <div class="modal-card" style="text-align: left;">
       <h3 class="modal-title" id="form-modal-title" style="margin-bottom: 14px;">Tambah Data</h3>
@@ -234,7 +247,7 @@
   <section id="screen-dashboard" class="screen">
     <header class="app-header">
       <div>
-        <p style="font-size: 0.9rem;">Halo, <strong id="lbl-couple-name">Doni & Ellen</strong> </p>
+        <p style="font-size: 0.9rem;">Halo, <strong id="lbl-couple-name">Doni & Ellen</strong> 👋</p>
         <small style="opacity: 0.85;">Kelola keuangan keluarga dengan baik!</small>
       </div>
       <div onclick="handleLogout()" style="cursor:pointer;" title="Keluar"><i data-lucide="log-out" style="width:20px;"></i></div>
@@ -266,7 +279,7 @@
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <h3 style="font-size:0.95rem;">Pengeluaran Per Kategori</h3>
-          <a href="#" onclick="navigateTo('screen-transactions')" style="font-size:0.8rem; color:var(--primary-blue); text-decoration:none; font-weight:500;">Lihat Transaksi</a>
+          <span style="font-size:0.75rem; color:var(--text-gray);">Klik kategori untuk detail</span>
         </div>
         <div id="dashboard-category-expenses"></div>
       </div>
@@ -277,12 +290,12 @@
   <section id="screen-transactions" class="screen">
     <div class="sub-header">
       <div class="sub-header-left">
-        <h2>Daftar Transaksi</h2>
+        <h2 id="trx-header-title">Daftar Transaksi</h2>
       </div>
       <button class="btn-edit" onclick="openTrxForm()">+ Baru</button>
     </div>
     <div class="content">
-      <div class="tab-group">
+      <div class="tab-group" id="trx-tab-group">
         <button class="tab-btn active" onclick="filterTrx('semua', this)">Semua</button>
         <button class="tab-btn" onclick="filterTrx('Pemasukan', this)">Pemasukan</button>
         <button class="tab-btn" onclick="filterTrx('Pengeluaran', this)">Pengeluaran</button>
@@ -507,13 +520,11 @@
       document.getElementById('custom-modal').classList.remove('active');
     }
 
-    /* Universal Modal Reset (Memastikan tombol Simpan di SEMUA pop-up tidak stuck) */
     function openFormModal(title, bodyHTML, onSubmit) {
       document.getElementById('form-modal-title').innerText = title;
       document.getElementById('form-modal-body').innerHTML = bodyHTML;
       const btnSubmit = document.getElementById('btn-submit-form-modal');
       
-      // Force Reset Status Tombol Simpan
       btnSubmit.disabled = false;
       btnSubmit.removeAttribute('data-original-html');
       btnSubmit.innerHTML = `<span>Simpan</span>`;
@@ -531,7 +542,9 @@
     function navigateTo(screenId) {
       currentScreenId = screenId;
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(screenId).classList.add('active');
+      const activeScreen = document.getElementById(screenId);
+      activeScreen.classList.add('active');
+      activeScreen.scrollTop = 0; // Reset scroll posisi ke paling atas
       
       const navBottom = document.getElementById('main-bottom-nav');
       if (screenId === 'screen-login') {
@@ -548,12 +561,24 @@
       });
 
       if (screenId === 'screen-dashboard') renderDashboardCategoryExpenses();
-      if (screenId === 'screen-transactions') renderTransactions(appData.transactions);
+      if (screenId === 'screen-transactions') {
+        document.getElementById('trx-header-title').innerText = 'Daftar Transaksi';
+        renderTransactions(appData.transactions);
+      }
       if (screenId === 'screen-budget') renderBudgets();
       if (screenId === 'screen-profile') renderCategories();
       
-      window.scrollTo(0, 0);
       lucide.createIcons();
+    }
+
+    function filterByCategoryDetail(categoryName) {
+      navigateTo('screen-transactions');
+      document.getElementById('trx-header-title').innerText = `Detail: ${categoryName}`;
+      
+      const filtered = appData.transactions.filter(t => t.kategori === categoryName);
+      renderTransactions(filtered);
+
+      document.querySelectorAll('#trx-tab-group .tab-btn').forEach(b => b.classList.remove('active'));
     }
 
     function initData() {
@@ -611,9 +636,9 @@
         if (amount > 0) {
           const percent = totalExp > 0 ? Math.round((amount / totalExp) * 100) : 0;
           container.innerHTML += `
-            <div style="margin-bottom: 12px;">
+            <div class="cat-item-clickable" onclick="filterByCategoryDetail('${c.nama}')" title="Klik untuk lihat detail transaksi ${c.nama}">
               <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-                <strong>${c.nama}</strong>
+                <strong>${c.nama} <i data-lucide="chevron-right" style="width:14px; vertical-align:middle; color:var(--text-gray);"></i></strong>
                 <span class="text-red" style="font-weight:600;">${formatRupiah(amount)} (${percent}%)</span>
               </div>
               <div class="cat-progress-bg">
@@ -623,6 +648,7 @@
           `;
         }
       });
+      lucide.createIcons();
     }
 
     // ----------------- TRANSAKSI HANDLER ----------------- //
@@ -736,7 +762,8 @@
     }
 
     function filterTrx(type, btn) {
-      document.querySelectorAll('.tab-group .tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('trx-header-title').innerText = 'Daftar Transaksi';
+      document.querySelectorAll('#trx-tab-group .tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderTransactions(type === 'semua' ? appData.transactions : appData.transactions.filter(t => t.jenis === type));
     }
