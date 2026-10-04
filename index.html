@@ -41,7 +41,7 @@
       display: none;
       padding-bottom: 90px;
       box-shadow: 0 0 20px rgba(0,0,0,0.05);
-      overflow-y: auto; /* Memastikan scroll terjadi di dalam screen agar sticky header bekerja */
+      overflow-y: auto;
     }
     .screen.active { display: block; }
 
@@ -128,7 +128,7 @@
 
     .item-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
     .item-row:last-child { border-bottom: none; }
-    .item-left { display: flex; align-items: center; gap: 12px; }
+    .item-left { display: flex; align-items: center; gap: 12px; text-align: left; }
     .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; flex-shrink: 0; }
 
     .cat-item-clickable {
@@ -172,7 +172,7 @@
     /* Custom Modals */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; backdrop-filter: blur(2px); }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: white; width: 100%; max-width: 360px; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
+    .modal-card { background: white; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popIn 0.2s ease-out; }
     .modal-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
     .modal-icon.info { background: var(--light-blue); color: var(--primary-blue); }
     .modal-icon.success { background: #D1FAE5; color: var(--green); }
@@ -190,7 +190,7 @@
 </head>
 <body>
 
-  <!-- Custom Pop-up Alert Modal -->
+  <!-- Custom Pop-up Alert / Info Modal -->
   <div class="modal-overlay" id="custom-modal">
     <div class="modal-card">
       <div class="modal-icon info" id="modal-icon"><i data-lucide="info" id="modal-icon-i"></i></div>
@@ -202,12 +202,12 @@
     </div>
   </div>
 
-  <!-- Custom Input Pop-up Modal -->
+  <!-- Custom Input / Detail Pop-up Modal -->
   <div class="modal-overlay" id="form-modal">
     <div class="modal-card" style="text-align: left;">
       <h3 class="modal-title" id="form-modal-title" style="margin-bottom: 14px;">Tambah Data</h3>
       <div id="form-modal-body"></div>
-      <div class="modal-actions" style="margin-top: 16px;">
+      <div class="modal-actions" id="form-modal-actions" style="margin-top: 16px;">
         <button class="modal-btn modal-btn-sec" onclick="closeFormModal()">Batal</button>
         <button class="modal-btn btn-primary" id="btn-submit-form-modal"><span>Simpan</span></button>
       </div>
@@ -290,7 +290,7 @@
   <section id="screen-transactions" class="screen">
     <div class="sub-header">
       <div class="sub-header-left">
-        <h2 id="trx-header-title">Daftar Transaksi</h2>
+        <h2>Daftar Transaksi</h2>
       </div>
       <button class="btn-edit" onclick="openTrxForm()">+ Baru</button>
     </div>
@@ -520,22 +520,32 @@
       document.getElementById('custom-modal').classList.remove('active');
     }
 
-    function openFormModal(title, bodyHTML, onSubmit) {
+    function openFormModal(title, bodyHTML, onSubmit = null, showDefaultActions = true) {
       document.getElementById('form-modal-title').innerText = title;
       document.getElementById('form-modal-body').innerHTML = bodyHTML;
-      const btnSubmit = document.getElementById('btn-submit-form-modal');
-      
-      btnSubmit.disabled = false;
-      btnSubmit.removeAttribute('data-original-html');
-      btnSubmit.innerHTML = `<span>Simpan</span>`;
+      const actionsBox = document.getElementById('form-modal-actions');
 
-      btnSubmit.onclick = () => onSubmit(btnSubmit);
+      if (showDefaultActions && onSubmit) {
+        actionsBox.style.display = 'flex';
+        actionsBox.innerHTML = `
+          <button class="modal-btn modal-btn-sec" onclick="closeFormModal()">Batal</button>
+          <button class="modal-btn btn-primary" id="btn-submit-form-modal"><span>Simpan</span></button>
+        `;
+        const btnSubmit = document.getElementById('btn-submit-form-modal');
+        btnSubmit.disabled = false;
+        btnSubmit.removeAttribute('data-original-html');
+        btnSubmit.innerHTML = `<span>Simpan</span>`;
+        btnSubmit.onclick = () => onSubmit(btnSubmit);
+      } else {
+        actionsBox.style.display = 'flex';
+        actionsBox.innerHTML = `<button class="modal-btn btn-primary" onclick="closeFormModal()">Tutup</button>`;
+      }
+
       document.getElementById('form-modal').classList.add('active');
+      lucide.createIcons();
     }
 
     function closeFormModal() {
-      const btnSubmit = document.getElementById('btn-submit-form-modal');
-      setBtnLoading(btnSubmit, false);
       document.getElementById('form-modal').classList.remove('active');
     }
 
@@ -544,7 +554,7 @@
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       const activeScreen = document.getElementById(screenId);
       activeScreen.classList.add('active');
-      activeScreen.scrollTop = 0; // Reset scroll posisi ke paling atas
+      activeScreen.scrollTop = 0;
       
       const navBottom = document.getElementById('main-bottom-nav');
       if (screenId === 'screen-login') {
@@ -561,24 +571,54 @@
       });
 
       if (screenId === 'screen-dashboard') renderDashboardCategoryExpenses();
-      if (screenId === 'screen-transactions') {
-        document.getElementById('trx-header-title').innerText = 'Daftar Transaksi';
-        renderTransactions(appData.transactions);
-      }
+      if (screenId === 'screen-transactions') renderTransactions(appData.transactions);
       if (screenId === 'screen-budget') renderBudgets();
       if (screenId === 'screen-profile') renderCategories();
       
       lucide.createIcons();
     }
 
-    function filterByCategoryDetail(categoryName) {
-      navigateTo('screen-transactions');
-      document.getElementById('trx-header-title').innerText = `Detail: ${categoryName}`;
-      
-      const filtered = appData.transactions.filter(t => t.kategori === categoryName);
-      renderTransactions(filtered);
+    // --- FITUR POP-UP DETAIL KATEGORI --- //
+    function openCategoryDetailModal(categoryName) {
+      const filteredTrx = appData.transactions.filter(t => t.kategori === categoryName);
+      let total = 0;
+      filteredTrx.forEach(t => total += Number(t.jumlah));
 
-      document.querySelectorAll('#trx-tab-group .tab-btn').forEach(b => b.classList.remove('active'));
+      let itemsHtml = '';
+      if (filteredTrx.length === 0) {
+        itemsHtml = '<p style="text-align:center; color:var(--text-gray); padding:16px 0; font-size:0.85rem;">Tidak ada transaksi pada kategori ini.</p>';
+      } else {
+        filteredTrx.slice().reverse().forEach(t => {
+          itemsHtml += `
+            <div class="item-row">
+              <div class="item-left">
+                <div class="item-icon"><i data-lucide="shopping-bag" style="width:16px;"></i></div>
+                <div>
+                  <strong>${t.tanggal}</strong> <small>(${t.pengguna})</small><br>
+                  <small style="color:var(--text-gray);">${t.catatan || '-'}</small>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <strong class="text-red">-${formatRupiah(t.jumlah)}</strong><br>
+                <button class="btn-edit" onclick='closeFormModal(); openTrxForm(${JSON.stringify(t)})'>Edit</button>
+                <button class="btn-danger" onclick="closeFormModal(); deleteTrx('${t.id}')"><span>Hapus</span></button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const bodyContent = `
+        <div style="background:var(--light-blue); padding:12px; border-radius:10px; margin-bottom:12px;">
+          <small style="color:var(--text-gray);">Total Pengeluaran ${categoryName}</small>
+          <h3 style="color:var(--red); font-size:1.2rem; font-weight:700;">${formatRupiah(total)}</h3>
+        </div>
+        <div style="max-height:260px; overflow-y:auto; padding-right:4px;">
+          ${itemsHtml}
+        </div>
+      `;
+
+      openFormModal(`Detail: ${categoryName}`, bodyContent, null, false);
     }
 
     function initData() {
@@ -636,7 +676,7 @@
         if (amount > 0) {
           const percent = totalExp > 0 ? Math.round((amount / totalExp) * 100) : 0;
           container.innerHTML += `
-            <div class="cat-item-clickable" onclick="filterByCategoryDetail('${c.nama}')" title="Klik untuk lihat detail transaksi ${c.nama}">
+            <div class="cat-item-clickable" onclick="openCategoryDetailModal('${c.nama}')" title="Klik untuk lihat detail ${c.nama}">
               <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
                 <strong>${c.nama} <i data-lucide="chevron-right" style="width:14px; vertical-align:middle; color:var(--text-gray);"></i></strong>
                 <span class="text-red" style="font-weight:600;">${formatRupiah(amount)} (${percent}%)</span>
@@ -721,9 +761,8 @@
           closeFormModal();
           showAlert('Sukses', res.message, 'success');
           initData();
-          navigateTo('screen-transactions');
         });
-      });
+      }, true);
     }
 
     function deleteTrx(id) {
@@ -731,7 +770,6 @@
         fetchFromBackend("hapusTransaksi", { id: id }, res => {
           showAlert('Dihapus', res.message, 'success');
           initData();
-          navigateTo('screen-transactions');
         });
       });
     }
@@ -762,7 +800,6 @@
     }
 
     function filterTrx(type, btn) {
-      document.getElementById('trx-header-title').innerText = 'Daftar Transaksi';
       document.querySelectorAll('#trx-tab-group .tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderTransactions(type === 'semua' ? appData.transactions : appData.transactions.filter(t => t.jenis === type));
@@ -793,9 +830,8 @@
           closeFormModal();
           showAlert('Sukses', res.message, 'success');
           initData();
-          navigateTo('screen-budget');
         });
-      });
+      }, true);
     }
 
     function renderBudgets() {
@@ -825,7 +861,6 @@
         fetchFromBackend("hapusBudget", { id: id }, res => {
           showAlert('Dihapus', res.message, 'success');
           initData();
-          navigateTo('screen-budget');
         });
       });
     }
@@ -858,9 +893,8 @@
           closeFormModal();
           showAlert('Sukses', res.message, 'success');
           initData();
-          navigateTo('screen-profile');
         });
-      });
+      }, true);
     }
 
     function renderCategories() {
@@ -884,7 +918,6 @@
         fetchFromBackend("hapusKategori", { id: id }, res => {
           showAlert('Dihapus', res.message, 'success');
           initData();
-          navigateTo('screen-profile');
         });
       });
     }
