@@ -387,6 +387,15 @@
       return cleanStr;
     }
 
+    // Fungsi Pengurutan Transaksi Berdasarkan Tanggal (Kronologis Menurun / Terbaru Paling Atas)
+    function getSortedTransactions(trxList) {
+      return trxList.slice().sort((a, b) => {
+        const dateA = new Date(a.tanggal);
+        const dateB = new Date(b.tanggal);
+        return dateB - dateA;
+      });
+    }
+
     function fetchFromBackend(action, payloadData = null, onSuccess = null) {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_URL")) {
         showAlert('URL Belum Diset', 'Masukkan URL Web App Deployment dari Apps Script pada variabel APPS_SCRIPT_URL di file index.html', 'danger');
@@ -587,16 +596,19 @@
       lucide.createIcons();
     }
 
+    // Pop-up Detail Per Kategori (Tanpa Tombol Edit & Hapus, Diurutkan Berdasarkan Tanggal)
     function openCategoryDetailModal(categoryName) {
       const filteredTrx = appData.transactions.filter(t => t.kategori === categoryName);
+      const sortedTrx = getSortedTransactions(filteredTrx);
+
       let total = 0;
       filteredTrx.forEach(t => total += Number(t.jumlah));
 
       let itemsHtml = '';
-      if (filteredTrx.length === 0) {
+      if (sortedTrx.length === 0) {
         itemsHtml = '<p style="text-align:center; color:var(--text-gray); padding:16px 0; font-size:0.85rem;">Tidak ada transaksi pada kategori ini.</p>';
       } else {
-        filteredTrx.slice().reverse().forEach(t => {
+        sortedTrx.forEach(t => {
           itemsHtml += `
             <div class="item-row">
               <div class="item-left">
@@ -607,9 +619,7 @@
                 </div>
               </div>
               <div style="text-align:right;">
-                <strong class="text-red">-${formatRupiah(t.jumlah)}</strong><br>
-                <button class="btn-edit" onclick='closeFormModal(); openTrxForm(${JSON.stringify(t)})'>Edit</button>
-                <button class="btn-danger" onclick="closeFormModal(); deleteTrx('${t.id}')"><span>Hapus</span></button>
+                <strong class="text-red">-${formatRupiah(t.jumlah)}</strong>
               </div>
             </div>
           `;
@@ -781,7 +791,6 @@
         });
       }, true);
 
-      // Pengisian nilai elemen tanggal secara eksplisit agar bebas dari bug penanggalan
       setTimeout(() => {
         const inputElem = document.getElementById('pop-trx-tanggal');
         if (inputElem) inputElem.value = defaultDate;
@@ -797,10 +806,13 @@
       });
     }
 
+    // Render Daftar Transaksi Utama (Diurutkan Berdasarkan Tanggal Terbaru Paling Atas)
     function renderTransactions(list) {
       const container = document.getElementById('trx-list-container');
-      container.innerHTML = list.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray); font-size:0.85rem;">Belum ada data</p>' : '';
-      list.slice().reverse().forEach(t => {
+      const sortedList = getSortedTransactions(list);
+
+      container.innerHTML = sortedList.length === 0 ? '<p style="text-align:center; padding:10px; color:var(--text-gray); font-size:0.85rem;">Belum ada data</p>' : '';
+      sortedList.forEach(t => {
         const isInc = t.jenis === 'Pemasukan';
         container.innerHTML += `
           <div class="item-row">
