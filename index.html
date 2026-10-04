@@ -32,7 +32,6 @@
       overflow-x: hidden;
     }
 
-    /* Perbaikan Scroll Container */
     .screen {
       width: 100%;
       max-width: 480px;
@@ -45,6 +44,7 @@
     }
     .screen.active { display: block; }
 
+    /* Sticky Headers */
     .app-header {
       background: linear-gradient(135deg, #1976D2, #1565C0);
       color: white;
@@ -54,6 +54,9 @@
       align-items: center;
       border-bottom-left-radius: 16px;
       border-bottom-right-radius: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
     }
 
     .sub-header {
@@ -63,6 +66,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
     }
     .sub-header-left { display: flex; align-items: center; gap: 12px; }
     .sub-header h2 { font-size: clamp(1rem, 3.5vw, 1.15rem); font-weight: 600; }
@@ -122,7 +128,6 @@
     .item-left { display: flex; align-items: center; gap: 12px; }
     .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; flex-shrink: 0; }
 
-    /* Progress bar untuk Pengeluaran per Kategori */
     .cat-progress-bg { background: #F1F5F9; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
     .cat-progress-fill { background: var(--red); height: 100%; border-radius: 4px; transition: width 0.3s ease; }
 
@@ -218,7 +223,7 @@
 
       <div class="form-group" style="width:100%; margin-bottom:16px;">
         <label style="text-align:left;">PIN / Password</label>
-        <input type="password" id="login-pin" placeholder="Masukkan PIN (Default: 1234)" style="text-align:center; font-size:1.1rem; letter-spacing:2px;">
+        <input type="password" id="login-pin" placeholder="Masukkan PIN" style="text-align:center; font-size:1.1rem; letter-spacing:2px;">
       </div>
 
       <button class="btn-primary" id="btn-login" onclick="handleLogin()"><span>Masuk Aplikasi</span></button>
@@ -229,7 +234,7 @@
   <section id="screen-dashboard" class="screen">
     <header class="app-header">
       <div>
-        <p style="font-size: 0.9rem;">Halo, <strong id="lbl-couple-name">Doni & Ellen</strong> 👋</p>
+        <p style="font-size: 0.9rem;">Halo, <strong id="lbl-couple-name">Doni & Ellen</strong> </p>
         <small style="opacity: 0.85;">Kelola keuangan keluarga dengan baik!</small>
       </div>
       <div onclick="handleLogout()" style="cursor:pointer;" title="Keluar"><i data-lucide="log-out" style="width:20px;"></i></div>
@@ -258,7 +263,6 @@
         </div>
       </div>
 
-      <!-- Dashboard Update: Total Pengeluaran per Kategori -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <h3 style="font-size:0.95rem;">Pengeluaran Per Kategori</h3>
@@ -352,6 +356,15 @@
 
     function formatRupiah(num) { return 'Rp ' + Number(num || 0).toLocaleString('id-ID'); }
 
+    function formatShortDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return parts[2] + '/' + parts[1];
+      }
+      return dateStr;
+    }
+
     function fetchFromBackend(action, payloadData = null, onSuccess = null) {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_URL")) {
         showAlert('URL Belum Diset', 'Masukkan URL Web App Deployment dari Apps Script pada variabel APPS_SCRIPT_URL di file index.html', 'danger');
@@ -391,12 +404,18 @@
 
       if (isLoading) {
         btn.disabled = true;
-        btn.setAttribute('data-original-html', btn.innerHTML);
+        if (!btn.getAttribute('data-original-html')) {
+          btn.setAttribute('data-original-html', btn.innerHTML);
+        }
         btn.innerHTML = `<span class="spinner"></span> <span>${loadingText}</span>`;
       } else {
         btn.disabled = false;
         const original = btn.getAttribute('data-original-html');
-        if (original) btn.innerHTML = original;
+        if (original) {
+          btn.innerHTML = original;
+        } else {
+          btn.innerHTML = `<span>Simpan</span>`;
+        }
       }
     }
 
@@ -436,12 +455,11 @@
           navigateTo('screen-dashboard');
         } else {
           setBtnLoading(btnLogin, false);
-          showAlert('Login Gagal', 'PIN yang kamu masukkan salah. (Default PIN: 1234)', 'danger');
+          showAlert('Login Gagal', 'PIN yang kamu masukkan salah.', 'danger');
         }
       }, 300);
     }
 
-    /* Perbaikan Logout: tidak memicu tombol hapus / loading berulang */
     function handleLogout() {
       showConfirmModal('Keluar', 'Apakah kamu yakin ingin keluar dari akun?', () => {
         document.getElementById('login-pin').value = '';
@@ -489,15 +507,24 @@
       document.getElementById('custom-modal').classList.remove('active');
     }
 
+    /* Universal Modal Reset (Memastikan tombol Simpan di SEMUA pop-up tidak stuck) */
     function openFormModal(title, bodyHTML, onSubmit) {
       document.getElementById('form-modal-title').innerText = title;
       document.getElementById('form-modal-body').innerHTML = bodyHTML;
       const btnSubmit = document.getElementById('btn-submit-form-modal');
+      
+      // Force Reset Status Tombol Simpan
+      btnSubmit.disabled = false;
+      btnSubmit.removeAttribute('data-original-html');
+      btnSubmit.innerHTML = `<span>Simpan</span>`;
+
       btnSubmit.onclick = () => onSubmit(btnSubmit);
       document.getElementById('form-modal').classList.add('active');
     }
 
     function closeFormModal() {
+      const btnSubmit = document.getElementById('btn-submit-form-modal');
+      setBtnLoading(btnSubmit, false);
       document.getElementById('form-modal').classList.remove('active');
     }
 
@@ -558,7 +585,6 @@
       renderDashboardCategoryExpenses();
     }
 
-    /* Dashboard: Render Total Pengeluaran Per Kategori */
     function renderDashboardCategoryExpenses() {
       const container = document.getElementById('dashboard-category-expenses');
       if (!container) return;
@@ -599,7 +625,7 @@
       });
     }
 
-    // ----------------- TRANSAKSI MODAL FORM CUSTOM UI ----------------- //
+    // ----------------- TRANSAKSI HANDLER ----------------- //
 
     function openTrxForm(t = null) {
       const catOptions = appData.categories
@@ -863,14 +889,15 @@
         if (t.jenis === 'Pengeluaran') groupedData[t.tanggal].exp += Number(t.jumlah);
       });
 
-      const dates = Object.keys(groupedData).sort();
-      const incData = dates.map(d => groupedData[d].inc);
-      const expData = dates.map(d => groupedData[d].exp);
+      const rawDates = Object.keys(groupedData).sort();
+      const simpleLabels = rawDates.map(d => formatShortDate(d));
+      const incData = rawDates.map(d => groupedData[d].inc);
+      const expData = rawDates.map(d => groupedData[d].exp);
 
       monthlyBarChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: dates.length ? dates : ['Hari ini'],
+          labels: simpleLabels.length ? simpleLabels : ['Hari ini'],
           datasets: [
             {
               label: 'Pemasukan',
